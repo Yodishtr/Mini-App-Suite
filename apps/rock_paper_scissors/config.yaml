@@ -1,2 +1,6 @@
 # defaults for the different properties of the game
-# difficulty, paths etc
+# difficulty, points, etc
+rock_paper_scissors:
+  defaults:
+    difficulty: "medium"
+    num_rounds: 5
