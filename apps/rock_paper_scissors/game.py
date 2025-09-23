@@ -62,6 +62,9 @@ class Game:
         self.computerScore = 0
         self.computerMove = None
         self.frequencyAnalysis = {Move.ROCK: 0, Move.PAPER: 0, Move.SCISSORS: 0}
+        self.playerWins = 0
+        self.computerWins = 0
+        self.draws = 0
 
     def start(self):
         """Can make it emit an RPS event? so that changes can be propagated to UI"""
@@ -69,8 +72,9 @@ class Game:
         self.computerScore = 0
         self.playerScore = 0
         self.computerMove = None
-        for key in self.frequencyAnalysis:
-            self.frequencyAnalysis[key] = 0
+        self.playerWins = 0
+        self.computerWins = 0
+        self.draws = 0
 
     def reset(self):
         """resets the game"""
@@ -78,12 +82,42 @@ class Game:
         self.computerScore = 0
         self.playerScore = 0
         self.computerMove = None
-        for key in self.frequencyAnalysis:
-            self.frequencyAnalysis[key] = 0
+        self.playerWins = 0
+        self.computerWins = 0
+        self.draws = 0
 
     def legalMove(self):
         """Returns a list of the allowed moves"""
-        return [Move.ROCK, Move.PAPER, Move.SCISSORS]
+        return ["Rock", "rock", "ROCK", "r", "R",
+                "Paper", "paper", "PAPER", "P", "p",
+                "Scissors", "scissors", "SCISSORS", "S", "s", "Scissor", "scissor", "SCISSOR"]
+
+    def summary(self):
+        """
+        Returns a dictionary containing the game summary at this point in time.
+        :return: dictionary
+        """
+        gameSummary = {"Total Rounds": self.numRounds, "Current Round": self.currentRound,
+                       "Player Score": self.playerScore, "Player Wins": self.playerWins,
+                       "Computer Score": self.computerScore, "Computer Wins": self.computerWins,
+                       "Draws": self.draws
+                       }
+        return gameSummary
+
+    def is_over(self):
+        """
+        Returns true if current number of rounds == number of rounds in the game.
+        :return: bool
+        """
+        return self.currentRound == self.numRounds
+
+    def updateRounds(self):
+        """
+        Updates the current rounds instance variables
+        :return: None
+        """
+        self.currentRound += 1
+
 
     def playRound(self, playerMove: Move):
         """Returns a small ui friendly round result (could be a dict) and also emits
@@ -95,7 +129,8 @@ class Game:
             return "Invalid input"
         else:
             if self.difficulty == "easy":
-                result = self.easyCompMove(playerMove)
+                self.computerMove = self.easyCompMove(playerMove)
+                result = self.computerMove.beats(playerMove)
                 return result
             elif self.difficulty == "medium":
                 self.computerMove = self.mediumCompMove(playerMove)
@@ -111,8 +146,7 @@ class Game:
         preset = {1: Move.ROCK, 2: Move.PAPER, 3: Move.SCISSORS}
         computerChoice = randint(1, 3)
         currentComputerMove = preset[computerChoice]
-        self.computerMove = currentComputerMove
-        return self.computerMove.beats(playerMove)
+        return currentComputerMove
 
     def mediumCompMove(self, playerMove):
         """

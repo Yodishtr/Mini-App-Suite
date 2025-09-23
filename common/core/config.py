@@ -9,6 +9,10 @@ class Config():
         self.currentConfig = None
 
     def loadCurrentYAML(self):
+        """
+        Loads data from YAMl file into currentConfig instance variable.
+        :return: None
+        """
         try:
             with open(self.currentFilePath, 'r') as f:
                 self.currentConfig = yaml.safe_load(f)
@@ -16,5 +20,5 @@ class Config():
             print("File could not be found. Please provide a valid file path")
             return None
         except yaml.YAMLError as e:
-            print("YAML error: " + (e))
+            print("YAML error: " + str(e))
             return None
