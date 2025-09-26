@@ -18,6 +18,7 @@ class GameView(QMainWindow):
 
     def __init__(self):
         """View Initialization"""
+        BASE_PATH = os.path.dirname(__file__)
         super().__init__()
         self.setWindowTitle("Welcome to the Rock-Paper-Scissors Game!")
         self.setGeometry(400, 400, 800, 600)
@@ -26,25 +27,48 @@ class GameView(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         central_layout = QGridLayout(central_widget)
+        background_image = os.path.join(BASE_PATH, "RPS_background.jpg")
+        central_widget.setStyleSheet("background-image: url(" + background_image +
+                                     ");" +
+                                     "background-size: cover;")
 
         # Difficulty settings
+        # maybe move this and the choosing the number of rounds in a preliminary window
+        # where you can then choose the number of rounds first then have it switch to
+        # game view window
+        user_choice_layout = QHBoxLayout()
         self.easy_difficulty_button = QPushButton("Easy")
         self.medium_difficulty_button = QPushButton("Medium")
         self.hard_difficulty_button = QPushButton("Hard")
+        self.easy_difficulty_button.clicked.connect(self.difficulty_on_button_click)
+        self.medium_difficulty_button.clicked.connect(self.difficulty_on_button_click)
+        self.hard_difficulty_button.clicked.connect(self.difficulty_on_button_click)
 
         # set number of rounds
         self.roundsChosen = QSpinBox()
-        self.setupRoundsChosen()
+        self.roundsChosen.setMinimum(1)
+        self.roundsChosen.setMaximum(1000)
+        self.roundsChosen.setSingleStep(1)
+        self.roundsChosen.setSuffix("Rounds")
+
+        user_choice_layout.addWidget(self.easy_difficulty_button)
+        user_choice_layout.addSpacing(5)
+        user_choice_layout.addWidget(self.medium_difficulty_button)
+        user_choice_layout.addSpacing(5)
+        user_choice_layout.addWidget(self.hard_difficulty_button)
+        user_choice_layout.addSpacing(5)
+        user_choice_layout.addWidget(self.roundsChosen)
 
         # Set moves Button
-        # dont forget to create its own layout to be added to the central layout
-        # use a QHBoxLayout for this and also add the .connect.clicked method
+        # add an animation when the move is selected
         moves_layout = QHBoxLayout()
         self.rock_button = QPushButton("Rock")
         self.paper_button = QPushButton("Paper")
         self.scissor_button = QPushButton("Scissors")
+        self.rock_button.setEnabled(False)
+        self.paper_button.setEnabled(False)
+        self.scissor_button.setEnabled(False)
         # add icons to the moves button
-        BASE_PATH = os.path.dirname(__file__)
         rock_icon = os.path.join(BASE_PATH, "hand.png")
         self.rock_button.setIcon(QIcon(rock_icon))
         self.rock_button.clicked.connect(self.move_on_button_click)
@@ -57,8 +81,15 @@ class GameView(QMainWindow):
         self.scissor_button.setIcon(QIcon(scissors_icon))
         self.scissor_button.clicked.connect(self.move_on_button_click)
 
+        moves_layout.addWidget(self.rock_button)
+        moves_layout.addWidget(self.paper_button)
+        moves_layout.addWidget(self.scissor_button)
+
         # Menu Labels
         menu_layout = QHBoxLayout()
+
+        self.reset_button = QPushButton("Reset")
+        self.reset_button.clicked.connect(self.reset_on_click)
 
         difficulty_layout = QVBoxLayout()
         difficulty_title = QLabel("Difficulty")
@@ -99,25 +130,17 @@ class GameView(QMainWindow):
         menu_layout.addLayout(player_score_layout)
         menu_layout.addSpacing(20)
         menu_layout.addLayout(computer_score_layout)
+        menu_layout.addSpacing(20)
+        menu_layout.addWidget(self.reset_button)
 
         # Central layout adding other layouts
-        central_layout.addLayout(menu_layout, 0, 0, 2, 5)
+        central_layout.addLayout(menu_layout, 0, 0, 2, 6)
+        central_layout.addLayout(user_choice_layout, 1, 0, 1, 6)
+        # create an animation widget with fix width and height and which will
+        # have a layout (maybe QVBoxLayout) with a Qlabel containing the image
+        # and then add the widget here
+        central_layout.addLayout(moves_layout, 4, 1, 2, 6)
 
-        self.setup_ui()
-
-    def setup_ui(self):
-        """
-        Sets up the UI for the main focus of the game.
-        """
-        ui_setup_widget = QWidget()
-        ui_setup_layout = QGridLayout()
-        ui_setup_widget.setLayout(ui_setup_layout)
-
-        self.easy_difficulty_button.clicked.connect(self.difficulty_on_button_click)
-        self.medium_difficulty_button.clicked.connect(self.difficulty_on_button_click)
-        self.hard_difficulty_button.clicked.connect(self.difficulty_on_button_click)
-
-        self.setupRoundsChosen()
 
     @Slot
     def difficulty_on_button_click(self):
@@ -125,6 +148,9 @@ class GameView(QMainWindow):
         Evaluates the difficulty chosen by the player.
         """
         buttonChosen = self.sender()
+        self.easy_difficulty_button.setEnabled(False)
+        self.medium_difficulty_button.setEnabled(False)
+        self.hard_difficulty_button.setEnabled(False)
         if buttonChosen == self.easy_difficulty_button:
             return ("easy")
         elif buttonChosen == self.medium_difficulty_button:
@@ -146,14 +172,21 @@ class GameView(QMainWindow):
         elif moveChosen == self.scissor_button:
             return ("SCISSORS")
 
-    def setupRoundsChosen(self):
+    @Slot
+    def reset_on_click(self):
         """
-        Setting up the settings for the number of rounds chosen by the player
+        Controller uses this to activate the reset for the game
+        :return: None
         """
-        self.roundsChosen.setMinimum(1)
-        self.roundsChosen.setMaximum(1000)
-        self.roundsChosen.setSingleStep(1)
-        self.roundsChosen.setSuffix("Rounds")
+        self.update_rounds_played("0")
+        self.update_player_score("0")
+        self.update_computer_score("0")
+        self.easy_difficulty_button.setEnabled(True)
+        self.medium_difficulty_button.setEnabled(True)
+        self.hard_difficulty_button.setEnabled(True)
+        self.rock_button.setEnabled(False)
+        self.paper_button.setEnabled(False)
+        self.scissor_button.setEnabled(False)
 
     def update_difficulty(self, level: str):
         """
