@@ -7,9 +7,11 @@ consistent across the app.
 import os.path
 from pathlib import Path
 
-from PySide6.QtCore import Slot
+from PySide6.QtCore import QEasingCurve, QParallelAnimationGroup, QPoint, QPropertyAnimation, QRect, \
+    QSequentialAnimationGroup, QSize, Qt, Slot
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QMainWindow, QPushButton, QSpinBox, \
+from PySide6.QtWidgets import QGraphicsOpacityEffect, QGridLayout, QHBoxLayout, QLabel, QMainWindow, \
+    QPushButton, QSpinBox, \
     QVBoxLayout, QWidget
 
 
@@ -136,10 +138,17 @@ class GameView(QMainWindow):
         # Central layout adding other layouts
         central_layout.addLayout(menu_layout, 0, 0, 2, 6)
         central_layout.addLayout(user_choice_layout, 1, 0, 1, 6)
+        self.animation_widget = QWidget()
+        self.animation_widget.setFixedSize(240, 240)
+        self.animation_widget.setStyleSheet("border: 2px dashed gray")
+        central_layout.addWidget(self.animation_widget, 2, 1)
+        self._throw_label = None
+        self._opacity = None
+        self._anim_group = None
         # create an animation widget with fix width and height and which will
         # have a layout (maybe QVBoxLayout) with a Qlabel containing the image
         # and then add the widget here
-        central_layout.addLayout(moves_layout, 4, 1, 2, 6)
+        central_layout.addLayout(moves_layout, 5, 1, 2, 6)
 
 
     @Slot
@@ -166,10 +175,13 @@ class GameView(QMainWindow):
         """
         moveChosen = self.sender()
         if moveChosen == self.rock_button:
+            self.move_animation("ROCK")
             return ("ROCK")
         elif moveChosen == self.paper_button:
+            self.move_animation("PAPER")
             return ("PAPER")
         elif moveChosen == self.scissor_button:
+            self.move_animation("SCISSORS")
             return ("SCISSORS")
 
     @Slot
@@ -184,9 +196,7 @@ class GameView(QMainWindow):
         self.easy_difficulty_button.setEnabled(True)
         self.medium_difficulty_button.setEnabled(True)
         self.hard_difficulty_button.setEnabled(True)
-        self.rock_button.setEnabled(False)
-        self.paper_button.setEnabled(False)
-        self.scissor_button.setEnabled(False)
+        self.move_buttons_disabled()
 
     def update_difficulty(self, level: str):
         """
@@ -222,3 +232,138 @@ class GameView(QMainWindow):
         :param computer_score:
         """
         self.computer_score_display.setText(computer_score)
+
+    def move_buttons_enabled(self):
+        """
+        Enables the move buttons if they have been disabled
+        """
+        if (not self.rock_button.isEnabled()) and (not self.paper_button.isEnabled()) and \
+                (not self.paper_button.isEnabled()):
+            self.rock_button.setEnabled(True)
+            self.paper_button.setEnabled(True)
+            self.scissor_button.setEnabled(True)
+
+    def move_buttons_disabled(self):
+        """
+        Disables the move buttons if they have been enabled
+        """
+        if (self.rock_button.isEnabled() and self.paper_button.isEnabled() and
+                self.scissor_button.isEnabled()):
+            self.rock_button.setEnabled(False)
+            self.paper_button.setEnabled(False)
+            self.scissor_button.setEnabled(False)
+
+    def move_animation(self, move_selected):
+        """
+        Animates the move selected by the user in the animation_widget space.
+        :param move_selected:
+        """
+        if self._anim_group is not None:
+            try:
+                self._anim_group.stop()
+            except Exception:
+                pass
+            self._anim_group = None
+
+        self.move_buttons_disabled()
+        button_map = {
+            "Rock": self.rock_button,
+            "Paper": self.paper_button,
+            "Scissor": self.scissor_button
+        }
+        source_button = button_map[move_selected]
+        if source_button is None:
+            self.move_buttons_disabled()
+            return
+
+        icon = source_button.icon()
+        if icon.isNull():
+            self.move_buttons_enabled()
+            return
+
+        if self._throw_label is None:
+            self._throw_label = QLabel(self.animation_widget)
+            self._throw_label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+            self._throw_label.setScaledContents(True)
+
+        self._throw_label.raise_()
+        self._throw_label.show()
+
+        margin = 0
+        end_rect = self.animation_widget.contentsRect().adjusted(margin, margin, -margin, -margin)
+
+        target_size = QSize(max(1, end_rect.width()), max(1, end_rect.height()))
+        pixmap = icon.pixmap(target_size)
+        self._throw_label.setPixmap(pixmap)
+
+        button_center_global = source_button.mapToGlobal(source_button.rect().center())
+        start_center = self.animation_widget.mapFromGlobal(button_center_global)
+
+        start_scale = 0.35
+        w0 = max(1, int(end_rect.width() * start_scale))
+        h0 = max(1, int(end_rect.width() * start_scale))
+        start_rect = QRect(
+            QPoint(start_center.x() - w0 // 2, start_center.y() - h0 // 2),
+            QSize(w0, h0)
+        )
+        start_rect = start_rect.intersected(self.animation_widget.rect().adjusted(-w0, -h0, w0, h0))
+        self._throw_label.setGeometry(start_rect)
+
+        if self._opacity is None:
+            self._opacity = QGraphicsOpacityEffect(self._throw_label)
+        self._throw_label.setGraphicsEffect(self._opacity)
+        self._opacity.setOpacity(0.0)
+
+        duration_travel = 300
+        duration_squash = 90
+        duration_rebound = 140
+
+        anim_travel = QPropertyAnimation(self._throw_label, b"geometry")
+        anim_travel.setDuration(duration_travel)
+        anim_travel.setStartValue(start_rect)
+        anim_travel.setEndValue(end_rect)
+        anim_travel.setEasingCurve(QEasingCurve.OutQuart)
+
+        anim_fade = QPropertyAnimation(self._opacity, b"opacity")
+        anim_fade.setDuration(duration_travel)
+        anim_fade.setStartValue(0.0)
+        anim_fade.setEndValue(1.0)
+        anim_fade.setEasingCurve(QEasingCurve.OutCubic)
+
+        travel_group = QParallelAnimationGroup()
+        travel_group.addAnimation(anim_travel)
+        travel_group.addAnimation(anim_fade)
+
+        squeeze_x = int(end_rect.width() * 0.05)
+        squeeze_y = int(end_rect.height() * 0.05)
+        squash_rect = QRect(
+            end_rect.left() - squeeze_x,
+            end_rect.top() - squeeze_y,
+            end_rect.width() + 2 * squeeze_x,
+            end_rect.height() + 2 * squeeze_y
+        )
+
+        anim_squash = QPropertyAnimation(self._throw_label, b"geometry")
+        anim_squash.setDuration(duration_squash)
+        anim_squash.setStartValue(end_rect)
+        anim_squash.setEndValue(squash_rect)
+        anim_squash.setEasingCurve(QEasingCurve.InQuad)
+
+        anim_rebound = QPropertyAnimation(self._throw_label, b"geometry")
+        anim_rebound.setDuration(duration_rebound)
+        anim_rebound.setStartValue(squash_rect)
+        anim_rebound.setEndValue(end_rect)
+        anim_rebound.setEasingCurve(QEasingCurve.OutBack)
+
+        seq = QSequentialAnimationGroup(self)
+        seq.addAnimation(travel_group)
+        seq.addAnimation(anim_squash)
+        seq.addAnimation(anim_rebound)
+
+        def _on_finished():
+            self._anim_group = None
+            self.move_buttons_enabled()
+
+        seq.finished.connect(_on_finished())
+        self._anim_group = seq
+        seq.start()
