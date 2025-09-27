@@ -267,9 +267,9 @@ class GameView(QMainWindow):
 
         self.move_buttons_disabled()
         button_map = {
-            "Rock": self.rock_button,
-            "Paper": self.paper_button,
-            "Scissor": self.scissor_button
+            "ROCK": self.rock_button,
+            "PAPER": self.paper_button,
+            "SCISSOR": self.scissor_button
         }
         source_button = button_map[move_selected]
         if source_button is None:
