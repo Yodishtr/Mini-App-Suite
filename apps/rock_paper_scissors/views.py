@@ -42,16 +42,13 @@ class GameView(QMainWindow):
         self.easy_difficulty_button = QPushButton("Easy")
         self.medium_difficulty_button = QPushButton("Medium")
         self.hard_difficulty_button = QPushButton("Hard")
-        self.easy_difficulty_button.clicked.connect(self.difficulty_on_button_click)
-        self.medium_difficulty_button.clicked.connect(self.difficulty_on_button_click)
-        self.hard_difficulty_button.clicked.connect(self.difficulty_on_button_click)
 
         # set number of rounds
         self.roundsChosen = QSpinBox()
         self.roundsChosen.setMinimum(1)
         self.roundsChosen.setMaximum(1000)
         self.roundsChosen.setSingleStep(1)
-        self.roundsChosen.setSuffix("Rounds")
+        self.roundsChosen.setSuffix(" Rounds")
 
         user_choice_layout.addWidget(self.easy_difficulty_button)
         user_choice_layout.addSpacing(5)
@@ -73,15 +70,12 @@ class GameView(QMainWindow):
         # add icons to the moves button
         rock_icon = os.path.join(BASE_PATH, "hand.png")
         self.rock_button.setIcon(QIcon(rock_icon))
-        self.rock_button.clicked.connect(self.move_on_button_click)
 
         paper_icon = os.path.join(BASE_PATH, "hand-paper.png")
         self.paper_button.setIcon(QIcon(paper_icon))
-        self.paper_button.clicked.connect(self.move_on_button_click)
 
         scissors_icon = os.path.join(BASE_PATH, "scissors.png")
         self.scissor_button.setIcon(QIcon(scissors_icon))
-        self.scissor_button.clicked.connect(self.move_on_button_click)
 
         moves_layout.addWidget(self.rock_button)
         moves_layout.addWidget(self.paper_button)
@@ -149,40 +143,6 @@ class GameView(QMainWindow):
         # have a layout (maybe QVBoxLayout) with a Qlabel containing the image
         # and then add the widget here
         central_layout.addLayout(moves_layout, 5, 1, 2, 6)
-
-
-    @Slot
-    def difficulty_on_button_click(self):
-        """
-        Evaluates the difficulty chosen by the player.
-        """
-        buttonChosen = self.sender()
-        self.easy_difficulty_button.setEnabled(False)
-        self.medium_difficulty_button.setEnabled(False)
-        self.hard_difficulty_button.setEnabled(False)
-        if buttonChosen == self.easy_difficulty_button:
-            return ("easy")
-        elif buttonChosen == self.medium_difficulty_button:
-            return ("medium")
-        elif buttonChosen == self.hard_difficulty_button:
-            return ("hard")
-
-    @Slot
-    def move_on_button_click(self):
-        """
-        Controller uses this to determine which move has been selected by the player
-        :return: str
-        """
-        moveChosen = self.sender()
-        if moveChosen == self.rock_button:
-            self.move_animation("ROCK")
-            return ("ROCK")
-        elif moveChosen == self.paper_button:
-            self.move_animation("PAPER")
-            return ("PAPER")
-        elif moveChosen == self.scissor_button:
-            self.move_animation("SCISSORS")
-            return ("SCISSORS")
 
     @Slot
     def reset_on_click(self):
@@ -253,6 +213,35 @@ class GameView(QMainWindow):
             self.paper_button.setEnabled(False)
             self.scissor_button.setEnabled(False)
 
+    def enable_difficulty_buttons(self):
+        """
+        Enables the difficulty buttons.
+        """
+        if (not self.easy_difficulty_button.isEnabled() and
+                not self.medium_difficulty_button.isEnabled() and
+                not self.hard_difficulty_button.isEnabled()):
+            self.easy_difficulty_button.setEnabled(True)
+            self.medium_difficulty_button.setEnabled(True)
+            self.hard_difficulty_button.setEnabled(True)
+
+    def disable_difficulty_button(self):
+        """
+        Disables the difficult buttons.
+        """
+        if (self.easy_difficulty_button.isEnabled() and self.medium_difficulty_button.isEnabled()
+                and self.hard_difficulty_button.isEnabled()):
+            self.easy_difficulty_button.setEnabled(False)
+            self.medium_difficulty_button.setEnabled(False)
+            self.hard_difficulty_button.setEnabled(False)
+
+
+
+    def get_rounds_chosen(self):
+        """
+        Returns the number of rounds chosen by the player
+        """
+        return self.roundsChosen.value()
+
     def move_animation(self, move_selected):
         """
         Animates the move selected by the user in the animation_widget space.
@@ -269,7 +258,7 @@ class GameView(QMainWindow):
         button_map = {
             "ROCK": self.rock_button,
             "PAPER": self.paper_button,
-            "SCISSOR": self.scissor_button
+            "SCISSORS": self.scissor_button
         }
         source_button = button_map[move_selected]
         if source_button is None:
@@ -364,6 +353,6 @@ class GameView(QMainWindow):
             self._anim_group = None
             self.move_buttons_enabled()
 
-        seq.finished.connect(_on_finished())
+        seq.finished.connect(_on_finished)
         self._anim_group = seq
         seq.start()

@@ -7,8 +7,8 @@ the game rules etc.
 """
 
 
-"""This is an inner class to represent the move of a player"""
 class Move(Enum):
+    """This is an inner class to represent the move of a player"""
     ROCK = "rock"
     PAPER = "paper"
     SCISSORS = "scissors"
@@ -55,7 +55,7 @@ class Game:
     """This class represents the game logic for rock paper scissors"""
     def __init__(self, difficulty: str, num_round):
         """Maybe add a storage device as an argument to the game."""
-        self.difficulty = difficulty
+        self.difficulty = difficulty.lower()
         self.numRounds = num_round
         self.currentRound = 0
         self.playerScore = 0
@@ -109,7 +109,7 @@ class Game:
         Returns true if current number of rounds == number of rounds in the game.
         :return: bool
         """
-        return self.currentRound == self.numRounds
+        return self.currentRound >= self.numRounds
 
     def updateRounds(self):
         """
@@ -117,7 +117,6 @@ class Game:
         :return: None
         """
         self.currentRound += 1
-
 
     def playRound(self, playerMove: Move):
         """Returns a small ui friendly round result (could be a dict) and also emits
@@ -131,14 +130,41 @@ class Game:
             if self.difficulty == "easy":
                 self.computerMove = self.easyCompMove(playerMove)
                 result = self.computerMove.beats(playerMove)
+                if result == "Computer Wins":
+                    self.computerScore += 1
+                    self.computerWins += 1
+                elif result == "Player Wins":
+                    self.playerScore += 1
+                    self.playerWins += 1
+                else:
+                    self.draws += 1
+                self.updateRounds()
                 return result
             elif self.difficulty == "medium":
                 self.computerMove = self.mediumCompMove(playerMove)
                 result = self.computerMove.beats(playerMove)
+                if result == "Computer Wins":
+                    self.computerScore += 1
+                    self.computerWins += 1
+                elif result == "Player Wins":
+                    self.playerScore += 1
+                    self.playerWins += 1
+                else:
+                    self.draws += 1
+                self.updateRounds()
                 return result
             elif self.difficulty == "hard":
                 self.computerMove = self.hardCompMove(playerMove)
                 result = self.computerMove.beats(playerMove)
+                if result == "Computer Wins":
+                    self.computerScore += 1
+                    self.computerWins += 1
+                elif result == "Player Wins":
+                    self.playerScore += 1
+                    self.playerWins += 1
+                else:
+                    self.draws += 1
+                self.updateRounds()
                 return result
 
     def easyCompMove(self, playerMove):
