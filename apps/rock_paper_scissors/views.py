@@ -129,6 +129,24 @@ class GameView(QMainWindow):
         menu_layout.addSpacing(20)
         menu_layout.addWidget(self.reset_button)
 
+        # computer move layout (to show user what move the computer made)
+        computer_move_layout = QVBoxLayout()
+        self.computer_move_label = QLabel("Computer Move: ")
+        self.computer_move_label_image = QLabel()
+        self.computer_move_label_image.setMinimumSize(240, 240)
+        self.computer_move_label_image.setAlignment(Qt.AlignCenter)
+        computer_move_layout.addWidget(self.computer_move_label)
+        computer_move_layout.addSpacing(10)
+        computer_move_layout.addWidget(self.computer_move_label_image)
+
+        # result display
+        final_result_layout = QHBoxLayout()
+        self.result_label_title = QLabel("The final result is: ")
+        self.result_label_display = QLabel("")
+        final_result_layout.addWidget(self.result_label_title)
+        final_result_layout.addSpacing(5)
+        final_result_layout.addWidget(self.result_label_display)
+
         # Central layout adding other layouts
         central_layout.addLayout(menu_layout, 0, 0, 2, 6)
         central_layout.addLayout(user_choice_layout, 1, 0, 1, 6)
@@ -143,6 +161,8 @@ class GameView(QMainWindow):
         # have a layout (maybe QVBoxLayout) with a Qlabel containing the image
         # and then add the widget here
         central_layout.addLayout(moves_layout, 5, 1, 2, 6)
+        central_layout.addLayout(computer_move_layout, 6, 1, 5, 5)
+        central_layout.addLayout(final_result_layout, 12, 1, 1, 5)
 
     @Slot
     def reset_on_click(self):
@@ -233,8 +253,6 @@ class GameView(QMainWindow):
             self.easy_difficulty_button.setEnabled(False)
             self.medium_difficulty_button.setEnabled(False)
             self.hard_difficulty_button.setEnabled(False)
-
-
 
     def get_rounds_chosen(self):
         """

@@ -124,48 +124,46 @@ class Game:
         is passed to this method.
         """
         self.frequencyAnalysis[playerMove] += 1
-        if playerMove not in self.legalMove():
-            return "Invalid input"
-        else:
-            if self.difficulty == "easy":
-                self.computerMove = self.easyCompMove(playerMove)
-                result = self.computerMove.beats(playerMove)
-                if result == "Computer Wins":
-                    self.computerScore += 1
-                    self.computerWins += 1
-                elif result == "Player Wins":
-                    self.playerScore += 1
-                    self.playerWins += 1
-                else:
-                    self.draws += 1
-                self.updateRounds()
-                return result
-            elif self.difficulty == "medium":
-                self.computerMove = self.mediumCompMove(playerMove)
-                result = self.computerMove.beats(playerMove)
-                if result == "Computer Wins":
-                    self.computerScore += 1
-                    self.computerWins += 1
-                elif result == "Player Wins":
-                    self.playerScore += 1
-                    self.playerWins += 1
-                else:
-                    self.draws += 1
-                self.updateRounds()
-                return result
-            elif self.difficulty == "hard":
-                self.computerMove = self.hardCompMove(playerMove)
-                result = self.computerMove.beats(playerMove)
-                if result == "Computer Wins":
-                    self.computerScore += 1
-                    self.computerWins += 1
-                elif result == "Player Wins":
-                    self.playerScore += 1
-                    self.playerWins += 1
-                else:
-                    self.draws += 1
-                self.updateRounds()
-                return result
+
+        if self.difficulty == "easy":
+            self.computerMove = self.easyCompMove(playerMove)
+            result = self.computerMove.beats(playerMove)
+            if result == "Computer Wins":
+                self.computerScore += 1
+                self.computerWins += 1
+            elif result == "Player Wins":
+                self.playerScore += 1
+                self.playerWins += 1
+            else:
+                self.draws += 1
+            self.updateRounds()
+            return result
+        elif self.difficulty == "medium":
+            self.computerMove = self.mediumCompMove(playerMove)
+            result = self.computerMove.beats(playerMove)
+            if result == "Computer Wins":
+                self.computerScore += 1
+                self.computerWins += 1
+            elif result == "Player Wins":
+                self.playerScore += 1
+                self.playerWins += 1
+            else:
+                self.draws += 1
+            self.updateRounds()
+            return result
+        elif self.difficulty == "hard":
+            self.computerMove = self.hardCompMove(playerMove)
+            result = self.computerMove.beats(playerMove)
+            if result == "Computer Wins":
+                self.computerScore += 1
+                self.computerWins += 1
+            elif result == "Player Wins":
+                self.playerScore += 1
+                self.playerWins += 1
+            else:
+                self.draws += 1
+            self.updateRounds()
+            return result
 
     def easyCompMove(self, playerMove):
         """Computer makes a random move"""

@@ -1,4 +1,7 @@
-from PySide6.QtCore import Slot
+import os
+
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtGui import QPixmap
 
 from apps.rock_paper_scissors.game import Game, Move
 from apps.rock_paper_scissors.views import GameView
@@ -28,10 +31,25 @@ class RockPaperScissorsApp:
         # game object for the game logic
         self.game = None
 
+        # set slot for the reset button in the view
+        self.views.reset_button.clicked.connect(self.reset_on_click)
 
-
-
-
+    @Slot
+    def reset_on_click(self):
+        """
+        Resets the difficulty and the game states to None
+        """
+        self.game.difficulty = ""
+        self.game.numRounds = 0
+        self.game.currentRound = 0
+        self.game.computerWins = 0
+        self.game.playerWins = 0
+        self.game.computerScore = 0
+        self.game.playerScore = 0
+        self.game.computerMove = 0
+        self.game.draws = 0
+        self.views.move_buttons_disabled()
+        self.views.enable_difficulty_buttons()
 
     @Slot
     def difficulty_on_button_click(self):
@@ -48,6 +66,7 @@ class RockPaperScissorsApp:
             self.game = Game(self.difficulty, rounds_chosen)
             self.views.difficulty_display.setText(self.difficulty)
             self.views.total_rounds_display.setText(rounds_chosen)
+            self.views.rounds_played_display.setText(str(0))
             self.views.player_score_display.setText("0")
             self.views.computer_score_display.setText("0")
             self.views.move_buttons_enabled()
@@ -59,6 +78,7 @@ class RockPaperScissorsApp:
             self.game = Game(self.difficulty, rounds_chosen)
             self.views.difficulty_display.setText(self.difficulty)
             self.views.total_rounds_display.setText(rounds_chosen)
+            self.views.rounds_played_display.setText(str(0))
             self.views.player_score_display.setText("0")
             self.views.computer_score_display.setText("0")
             self.views.move_buttons_enabled()
@@ -70,6 +90,7 @@ class RockPaperScissorsApp:
             self.game = Game(self.difficulty, rounds_chosen)
             self.views.difficulty_display.setText(self.difficulty)
             self.views.total_rounds_display.setText(rounds_chosen)
+            self.views.rounds_played_display.setText(str(0))
             self.views.player_score_display.setText("0")
             self.views.computer_score_display.setText("0")
             self.views.move_buttons_enabled()
@@ -89,31 +110,98 @@ class RockPaperScissorsApp:
             self.views.move_animation("ROCK")
             current_player_move = Move["ROCK"]
             current_result = self.game.playRound(current_player_move)
-            self.views.rounds_played_display.setText(self.game.currentRound)
-            self.views.player_score_display.setText(self.game.playerScore)
-            self.views.computer_score_display.setText(self.game.computerScore)
+
+            computer_move = self.game.computerMove
+            self.add_computer_move_image(computer_move)
+
+            self.views.rounds_played_display.setText(str(self.game.currentRound))
+            self.views.player_score_display.setText(str(self.game.playerScore))
+            self.views.computer_score_display.setText(str(self.game.computerScore))
             if self.game.is_over():
                 self.views.enable_difficulty_buttons()
                 self.views.move_buttons_disabled()
+                if self.game.playerScore > self.game.computerScore:
+                    self.views.result_label_display.setText("Player Won")
+                elif self.game.playerScore < self.game.computerScore:
+                    self.views.result_label_display.setText("Computer Won")
+                elif (self.game.draws > self.game.computerScore and
+                      self.game.draws > self.game.computerScore):
+                    self.views.result_label_display.setText("Draw")
 
         elif moveChosen == self.views.paper_button:
             self.views.move_animation("PAPER")
             current_player_move = Move["PAPER"]
             current_result = self.game.playRound(current_player_move)
-            self.views.rounds_played_display.setText(self.game.currentRound)
-            self.views.player_score_display.setText(self.game.playerScore)
-            self.views.computer_score_display.setText(self.game.computerScore)
+
+            computer_move = self.game.computerMove
+            self.add_computer_move_image(computer_move)
+
+            self.views.rounds_played_display.setText(str(self.game.currentRound))
+            self.views.player_score_display.setText(str(self.game.playerScore))
+            self.views.computer_score_display.setText(str(self.game.computerScore))
             if self.game.is_over():
                 self.views.enable_difficulty_buttons()
                 self.views.move_buttons_disabled()
+                if self.game.playerScore > self.game.computerScore:
+                    self.views.result_label_display.setText("Player Won")
+                elif self.game.playerScore < self.game.computerScore:
+                    self.views.result_label_display.setText("Computer Won")
+                elif (self.game.draws > self.game.computerScore and
+                      self.game.draws > self.game.computerScore):
+                    self.views.result_label_display.setText("Draw")
 
         elif moveChosen == self.views.scissor_button:
             self.views.move_animation("SCISSORS")
             current_player_move = Move["SCISSORS"]
             current_result = self.game.playRound(current_player_move)
-            self.views.rounds_played_display.setText(self.game.currentRound)
-            self.views.player_score_display.setText(self.game.playerScore)
-            self.views.computer_score_display.setText(self.game.computerScore)
+
+            computer_move = self.game.computerMove
+            self.add_computer_move_image(computer_move)
+
+            self.views.rounds_played_display.setText(str(self.game.currentRound))
+            self.views.player_score_display.setText(str(self.game.playerScore))
+            self.views.computer_score_display.setText(str(self.game.computerScore))
             if self.game.is_over():
                 self.views.enable_difficulty_buttons()
                 self.views.move_buttons_disabled()
+                if self.game.playerScore > self.game.computerScore:
+                    self.views.result_label_display.setText("Player Won")
+                elif self.game.playerScore < self.game.computerScore:
+                    self.views.result_label_display.setText("Computer Won")
+                elif (self.game.draws > self.game.computerScore and
+                      self.game.draws > self.game.computerScore):
+                    self.views.result_label_display.setText("Draw")
+
+    def add_computer_move_image(self, computer_move):
+        """
+        Displays the computer's move in the gui
+        :param computer_move:
+        """
+        BASE_PATH = os.path.dirname(__file__)
+        if computer_move.value == "rock":
+            rock_image = os.path.join(BASE_PATH, "hand.png")
+            rock_pixmap = QPixmap(rock_image)
+            scaled_rock_pixmap = rock_pixmap.scaled(
+                self.views.computer_move_label_image.size(),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            )
+            self.views.computer_move_label_image.setPixmap(scaled_rock_pixmap)
+        elif computer_move.value == "paper":
+            paper_image = os.path.join(BASE_PATH, "hand-paper.png")
+            paper_pixmap = QPixmap(paper_image)
+            scaled_paper_pixmap = paper_pixmap.scaled(
+                self.views.computer_move_label_image.size(),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            )
+            self.views.computer_move_label_image.setPixmap(scaled_paper_pixmap)
+        else:
+            scissors_image = os.path.join(BASE_PATH, "scissors.png")
+            scissors_pixmap = QPixmap(scissors_image)
+            scaled_scissor_pixmap = scissors_pixmap.scaled(
+                self.views.computer_move_label_image.size(),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
+            )
+            self.views.computer_move_label_image.setPixmap(scaled_scissor_pixmap)
