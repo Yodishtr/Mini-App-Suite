@@ -57,7 +57,6 @@ class GameView(QMainWindow):
         background-color: #d0d0d0;
     }}
     """)
-        central_widget.setAutoFillBackground(True)
         print("File exists:", os.path.exists(background_image))
         print("URL:", background_image_url)
 

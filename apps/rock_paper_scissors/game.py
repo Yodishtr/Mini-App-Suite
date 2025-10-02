@@ -185,6 +185,7 @@ class Game:
             playerMostUsed = None
             for key in self.frequencyAnalysis:
                 currentFrequency = self.frequencyAnalysis[key]
+                print("key: " + str(key) + " freq: " + str(currentFrequency))
                 if currentFrequency > mostUsed:
                     mostUsed = currentFrequency
                     playerMostUsed = key
