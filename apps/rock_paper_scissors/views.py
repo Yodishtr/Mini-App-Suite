@@ -8,7 +8,7 @@ import os.path
 from pathlib import Path
 
 from PySide6.QtCore import QEasingCurve, QParallelAnimationGroup, QPoint, QPropertyAnimation, QRect, \
-    QSequentialAnimationGroup, QSize, Qt, Slot
+    QSequentialAnimationGroup, QSize, Qt, QUrl, Slot
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QGraphicsOpacityEffect, QGridLayout, QHBoxLayout, QLabel, QMainWindow, \
     QPushButton, QSpinBox, \
@@ -27,12 +27,39 @@ class GameView(QMainWindow):
 
         # Central Widget
         central_widget = QWidget()
+        central_widget.setObjectName("central")
         self.setCentralWidget(central_widget)
         central_layout = QGridLayout(central_widget)
         background_image = os.path.join(BASE_PATH, "RPS_background.jpg")
-        central_widget.setStyleSheet("background-image: url(" + background_image +
-                                     ");" +
-                                     "background-size: cover;")
+        background_image_url = QUrl.fromLocalFile(background_image).toString()
+        central_widget.setStyleSheet(f"""
+    QWidget#central {{
+        background-image: url("{background_image}");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    }}
+    QPushButton {{
+        background-color: white;
+        border: 1px solid #333;
+        padding: 6px 12px;
+        border-radius: 6px;
+        color: black;
+    }}
+    QLabel {{
+        color: black;
+        font-weight: 700;
+    }}
+    QPushButton:hover {{
+        background-color: #f0f0f0;
+    }}
+    QPushButton:pressed {{
+        background-color: #d0d0d0;
+    }}
+    """)
+        central_widget.setAutoFillBackground(True)
+        print("File exists:", os.path.exists(background_image))
+        print("URL:", background_image_url)
 
         # Difficulty settings
         # maybe move this and the choosing the number of rounds in a preliminary window
@@ -85,7 +112,6 @@ class GameView(QMainWindow):
         menu_layout = QHBoxLayout()
 
         self.reset_button = QPushButton("Reset")
-        self.reset_button.clicked.connect(self.reset_on_click)
 
         difficulty_layout = QVBoxLayout()
         difficulty_title = QLabel("Difficulty")
@@ -149,7 +175,8 @@ class GameView(QMainWindow):
 
         # Central layout adding other layouts
         central_layout.addLayout(menu_layout, 0, 0, 2, 6)
-        central_layout.addLayout(user_choice_layout, 1, 0, 1, 6)
+        central_layout.addLayout(user_choice_layout, 5, 0, 1, 6)
+
         self.animation_widget = QWidget()
         self.animation_widget.setFixedSize(240, 240)
         self.animation_widget.setStyleSheet("border: 2px dashed gray")
@@ -160,23 +187,9 @@ class GameView(QMainWindow):
         # create an animation widget with fix width and height and which will
         # have a layout (maybe QVBoxLayout) with a Qlabel containing the image
         # and then add the widget here
-        central_layout.addLayout(moves_layout, 5, 1, 2, 6)
-        central_layout.addLayout(computer_move_layout, 6, 1, 5, 5)
-        central_layout.addLayout(final_result_layout, 12, 1, 1, 5)
-
-    @Slot
-    def reset_on_click(self):
-        """
-        Controller uses this to activate the reset for the game
-        :return: None
-        """
-        self.update_rounds_played("0")
-        self.update_player_score("0")
-        self.update_computer_score("0")
-        self.easy_difficulty_button.setEnabled(True)
-        self.medium_difficulty_button.setEnabled(True)
-        self.hard_difficulty_button.setEnabled(True)
-        self.move_buttons_disabled()
+        central_layout.addLayout(moves_layout, 6, 1, 2, 6)
+        central_layout.addLayout(computer_move_layout, 8, 1, 5, 5)
+        central_layout.addLayout(final_result_layout, 14, 1, 1, 5)
 
     def update_difficulty(self, level: str):
         """

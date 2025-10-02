@@ -1,13 +1,12 @@
 import os
-
-from PySide6.QtCore import Qt, Slot
+from PySide6.QtCore import QObject, Qt, Slot
 from PySide6.QtGui import QPixmap
 
 from apps.rock_paper_scissors.game import Game, Move
 from apps.rock_paper_scissors.views import GameView
 
 
-class RockPaperScissorsApp:
+class RockPaperScissorsApp(QObject):
     """
     This represents the GUI entry to display the game.
     It imports the game logic to allow the app to simply instantiate this
@@ -15,6 +14,7 @@ class RockPaperScissorsApp:
     """
 
     def __init__(self):
+        super().__init__()
         self.views = GameView()
         # setting slots for the difficulty buttons
         self.difficulty = None
@@ -34,8 +34,8 @@ class RockPaperScissorsApp:
         # set slot for the reset button in the view
         self.views.reset_button.clicked.connect(self.reset_on_click)
 
-    @Slot
-    def reset_on_click(self):
+    @Slot(bool)
+    def reset_on_click(self, checked: bool = False):
         """
         Resets the difficulty and the game states to None
         """
@@ -51,8 +51,8 @@ class RockPaperScissorsApp:
         self.views.move_buttons_disabled()
         self.views.enable_difficulty_buttons()
 
-    @Slot
-    def difficulty_on_button_click(self):
+    @Slot(bool)
+    def difficulty_on_button_click(self, checked: bool = False):
         """
         Evaluates the difficulty chosen by the player.
         """
@@ -65,7 +65,7 @@ class RockPaperScissorsApp:
             rounds_chosen = self.views.get_rounds_chosen()
             self.game = Game(self.difficulty, rounds_chosen)
             self.views.difficulty_display.setText(self.difficulty)
-            self.views.total_rounds_display.setText(rounds_chosen)
+            self.views.total_rounds_display.setText(str(rounds_chosen))
             self.views.rounds_played_display.setText(str(0))
             self.views.player_score_display.setText("0")
             self.views.computer_score_display.setText("0")
@@ -77,7 +77,7 @@ class RockPaperScissorsApp:
             rounds_chosen = self.views.get_rounds_chosen()
             self.game = Game(self.difficulty, rounds_chosen)
             self.views.difficulty_display.setText(self.difficulty)
-            self.views.total_rounds_display.setText(rounds_chosen)
+            self.views.total_rounds_display.setText(str(rounds_chosen))
             self.views.rounds_played_display.setText(str(0))
             self.views.player_score_display.setText("0")
             self.views.computer_score_display.setText("0")
@@ -89,15 +89,15 @@ class RockPaperScissorsApp:
             rounds_chosen = self.views.get_rounds_chosen()
             self.game = Game(self.difficulty, rounds_chosen)
             self.views.difficulty_display.setText(self.difficulty)
-            self.views.total_rounds_display.setText(rounds_chosen)
+            self.views.total_rounds_display.setText(str(rounds_chosen))
             self.views.rounds_played_display.setText(str(0))
             self.views.player_score_display.setText("0")
             self.views.computer_score_display.setText("0")
             self.views.move_buttons_enabled()
             self.views.disable_difficulty_button()
 
-    @Slot
-    def move_on_button_click(self):
+    @Slot(bool)
+    def move_on_button_click(self, checked: bool = False):
         """
         Controller uses this to determine which move has been selected by the player
         :return: str
@@ -205,3 +205,13 @@ class RockPaperScissorsApp:
                 Qt.SmoothTransformation
             )
             self.views.computer_move_label_image.setPixmap(scaled_scissor_pixmap)
+
+
+if __name__ == "__main__":
+    import sys
+    from PySide6.QtWidgets import QApplication
+
+    app = QApplication(sys.argv)
+    rps_app = RockPaperScissorsApp()
+    rps_app.views.show()
+    sys.exit(app.exec())
