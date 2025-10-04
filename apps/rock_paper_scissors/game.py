@@ -55,7 +55,10 @@ class Game:
     """This class represents the game logic for rock paper scissors"""
     def __init__(self, difficulty: str, num_round):
         """Maybe add a storage device as an argument to the game."""
-        self.difficulty = difficulty.lower()
+        if difficulty.isupper():
+            self.difficulty = difficulty.lower()
+        else:
+            self.difficulty = difficulty
         self.numRounds = num_round
         self.currentRound = 0
         self.playerScore = 0
