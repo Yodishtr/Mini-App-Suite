@@ -36,14 +36,14 @@ def run():
         app = QApplication(sys.argv)
         _RPS_APP = RockPaperScissorsApp()
         _RPS_APP.views.show()
-        _RPS_APP.destroyed.connect(_clear_rps_app())
+        _RPS_APP.destroyed.connect(_clear_rps_app)
         return app.exec()
     else:
         if _RPS_APP is not None:
             _RPS_APP.views.show()
-            _RPS_APP.destroyed.connect(_clear_rps_app())
+            _RPS_APP.destroyed.connect(_clear_rps_app)
         else:
             _RPS_APP = RockPaperScissorsApp()
             _RPS_APP.views.show()
-            _RPS_APP.destroyed.connect(_clear_rps_app())
+            _RPS_APP.destroyed.connect(_clear_rps_app)
         return 0
