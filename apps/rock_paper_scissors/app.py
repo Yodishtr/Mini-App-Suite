@@ -205,13 +205,3 @@ class RockPaperScissorsApp(QObject):
                 Qt.SmoothTransformation
             )
             self.views.computer_move_label_image.setPixmap(scaled_scissor_pixmap)
-
-
-if __name__ == "__main__":
-    import sys
-    from PySide6.QtWidgets import QApplication
-
-    app = QApplication(sys.argv)
-    rps_app = RockPaperScissorsApp()
-    rps_app.views.show()
-    sys.exit(app.exec())

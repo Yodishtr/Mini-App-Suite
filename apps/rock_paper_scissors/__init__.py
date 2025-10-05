@@ -2,8 +2,6 @@
 It allows the user to simply run this app.
 
 """
-import signal
-
 
 ONE_ROUND = 1
 FIVE_ROUND = 5
@@ -35,6 +33,8 @@ def run():
     if not QApplication.instance():
         app = QApplication(sys.argv)
         _RPS_APP = RockPaperScissorsApp()
+        if not app.quitOnLastWindowClosed():
+            app.setQuitOnLastWindowClosed(True)
         _RPS_APP.views.show()
         _RPS_APP.destroyed.connect(_clear_rps_app)
         return app.exec()
@@ -46,4 +46,4 @@ def run():
             _RPS_APP = RockPaperScissorsApp()
             _RPS_APP.views.show()
             _RPS_APP.destroyed.connect(_clear_rps_app)
-        return 0
+        return 1

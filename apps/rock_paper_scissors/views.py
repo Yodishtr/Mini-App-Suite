@@ -9,7 +9,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QEasingCurve, QParallelAnimationGroup, QPoint, QPropertyAnimation, QRect, \
     QSequentialAnimationGroup, QSize, Qt, QUrl, Slot
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QAction, QIcon, QKeySequence
 from PySide6.QtWidgets import QGraphicsOpacityEffect, QGridLayout, QHBoxLayout, QLabel, QMainWindow, \
     QPushButton, QSpinBox, \
     QVBoxLayout, QWidget
@@ -24,6 +24,10 @@ class GameView(QMainWindow):
         super().__init__()
         self.setWindowTitle("Welcome to the Rock-Paper-Scissors Game!")
         self.setGeometry(400, 400, 800, 600)
+        self.exit = QAction("Exit Application", self)
+        self.exit.setShortcut("Command+Q")
+        self.exit.triggered.connect(self._exit_app_q)
+        self.addAction(self.exit)
 
         # Central Widget
         central_widget = QWidget()
@@ -189,6 +193,9 @@ class GameView(QMainWindow):
         central_layout.addLayout(moves_layout, 6, 1, 2, 6)
         central_layout.addLayout(computer_move_layout, 8, 1, 5, 5)
         central_layout.addLayout(final_result_layout, 14, 1, 1, 5)
+
+    def _exit_app_q(self):
+        self.close()
 
     def update_difficulty(self, level: str):
         """
