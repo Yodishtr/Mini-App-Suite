@@ -1,2 +1,2 @@
-BASE_PATH: $(CURRENT_DIR)
-BACKGROUND: $(CURRENT_DIR)/guessbackground.jpg
+path:
+  background: "guessbackground.jpg"

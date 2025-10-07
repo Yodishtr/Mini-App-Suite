@@ -57,3 +57,7 @@ class Game():
                 return result
             self.chances -= 1
         return result
+
+    def _show_number_to_guess(self):
+        """Returns the number to be guessed for that round"""
+        return self.number_to_guess
