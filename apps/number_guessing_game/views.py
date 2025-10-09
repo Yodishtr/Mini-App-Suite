@@ -4,7 +4,8 @@ Creates the GUI for the number guessing game.
 import os.path
 
 from PySide6.QtCore import QUrl
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QVBoxLayout, \
+from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, \
+    QVBoxLayout, \
     QWidget
 import yaml
 
@@ -35,6 +36,17 @@ class NumberGameView(QMainWindow):
                 background-repeat: no-repeat;
                 background-size: cover;
                 background-position: center;
+            }}
+            QHBoxLayout#result{{
+                border: 1px dashed;
+                font-size: 10px;
+                font-weight: 700;
+            }}
+            QPushButton:hover{{
+                background-color: #f0f0f0;
+            }}
+            QPushButton:pressed{{
+                background-color: #d0d0d0;
             }}
             """)
 
@@ -81,11 +93,38 @@ class NumberGameView(QMainWindow):
         user_guess_layout.addWidget(self.user_input_box)
         user_guess_layout.addSpacing(5)
 
+        # result for being able to guess correctly or not
+        user_result_layout = QHBoxLayout()
+        user_result_layout.setObjectName("result")
+        user_result_title = QLabel("Result: ")
+        self.user_result_label = QLabel("")
+        user_result_layout.addWidget(user_result_title)
+        user_result_layout.addSpacing(10)
+        user_result_layout.addWidget(self.user_result_label)
+
+        # add the difficulty buttons
+        difficulty_choice_layout = QHBoxLayout()
+        self.easy_difficulty_button = QPushButton("Easy")
+        self.medium_difficulty_button = QPushButton("Medium")
+        self.hard_difficulty_button = QPushButton("Hard")
+        self.play_button = QPushButton("Play")
+        difficulty_choice_layout.addWidget(self.easy_difficulty_button)
+        difficulty_choice_layout.addSpacing(10)
+        difficulty_choice_layout.addWidget(self.medium_difficulty_button)
+        difficulty_choice_layout.addSpacing(10)
+        difficulty_choice_layout.addWidget(self.hard_difficulty_button)
+        difficulty_choice_layout.addSpacing(10)
+        difficulty_choice_layout.addWidget(self.play_button)
+
         # setting up the central widget
         # starts on r0 and c1, spans 2r and 6 col
         central_widget_layout.addLayout(menu_layout, 0, 1, 2, 6)
+        # starts on r3 and c1, spans 1r and 6 col
+        central_widget_layout.addLayout(difficulty_choice_layout, 3, 1, 1, 6)
         # starts on r4 and c1, spans 2 r and 6 col
-        central_widget_layout.addLayout(user_guess_layout, 4, 1, 2, 5)
+        central_widget_layout.addLayout(user_guess_layout, 5, 1, 2, 5)
+        # starts on r8 and c1, spans 2r and 6 col
+        central_widget_layout.addLayout(user_result_layout, 8, 1, 2, 6)
 
 
     def _load_yaml(self):
@@ -100,3 +139,39 @@ class NumberGameView(QMainWindow):
         except yaml.YAMLError as e:
             print("Yaml error: " + str(e))
             return None
+
+    def enable_difficulty_buttons(self):
+        """
+        Enables difficulty buttons if they are disabled
+        """
+        if (not self.easy_difficulty_button.isEnabled()
+                and not self.medium_difficulty_button.isEnabled()
+                and not self.hard_difficulty_button.isEnabled()):
+            self.easy_difficulty_button.setEnabled(True)
+            self.medium_difficulty_button.setEnabled(True)
+            self.hard_difficulty_button.setEnabled(True)
+
+    def disable_difficulty_button(self):
+        """
+        Disables difficulty buttons if they are enabled
+        """
+        if (self.easy_difficulty_button.isEnabled()
+                and self.medium_difficulty_button.isEnabled()
+                and self.hard_difficulty_button.isEnabled()):
+            self.easy_difficulty_button.setEnabled(False)
+            self.medium_difficulty_button.setEnabled(False)
+            self.hard_difficulty_button.setEnabled(False)
+
+    def enable_guess_box(self):
+        """
+        Enables the guess box, ie line edit widget, if disabled
+        """
+        if (not self.user_input_box.isEnabled()):
+            self.user_input_box.setEnabled(True)
+
+    def disable_guess_box(self):
+        """
+        Disables the guess box, ie the line edit widget, if enabled
+        """
+        if (self.user_input_box.isEnabled()):
+            self.user_input_box.setEnabled(False)

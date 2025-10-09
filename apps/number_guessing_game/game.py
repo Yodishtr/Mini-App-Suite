@@ -26,8 +26,8 @@ class Game():
         else:
             self.hard_difficulty()
 
-    def run_game(self):
-        """Runs the game logic"""
+    def run_round(self):
+        """Runs the round game logic"""
         result = self._play_game()
         if result:
             self.player_score += 1
@@ -38,25 +38,20 @@ class Game():
         self.chances = 5
         self.number_to_guess = random.randint(1, 10)
 
-    def medium_difficulty(self):
+    def medium_difficulty_chosen(self):
         """Player guesses a number between 1 and 100 with 10 chances"""
         self.chances = 10
         self.number_to_guess = random.randint(1, 100)
 
-    def hard_difficulty(self):
+    def hard_difficulty_chosen(self):
         """Player guesses a number between 1 to 1000 with 20 chances"""
         self.chances = 20
         self.number_to_guess = random.randint(1, 1000)
 
     def _play_game(self):
         """Plays the game"""
-        result = False
-        while self.chances > 0:
-            if self.player_guess == self.number_to_guess:
-                result = True
-                return result
-            self.chances -= 1
-        return result
+        self.chances -= 1
+        return self.player_guess == self.number_to_guess
 
     def _show_number_to_guess(self):
         """Returns the number to be guessed for that round"""
