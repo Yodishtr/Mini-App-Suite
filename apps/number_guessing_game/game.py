@@ -16,22 +16,38 @@ class Game():
         self.number_to_guess = 0
         self.player_guess = 0
         self.chances = 0
+        self.current_round_score = 0
 
     def generated_number(self):
         """Generates a number. Number found in a certain range based on chosen difficulty"""
         if self.difficulty.lower() == "easy":
             self.easy_difficulty_chosen()
         elif self.difficulty.lower() == "medium":
-            self.medium_difficulty()
+            self.medium_difficulty_chosen()
         else:
-            self.hard_difficulty()
+            self.hard_difficulty_chosen()
 
     def run_round(self):
         """Runs the round game logic"""
         result = self._play_game()
+        self.rounds += 1
         if result:
             self.player_score += 1
-        self.rounds += 1
+            self.chances = 0
+            return True
+        return False
+
+    def reset_game(self):
+        """
+        resets the game to 0
+        """
+        self.rounds = 0
+        self.difficulty = None
+        self.player_score = 0
+        self.number_to_guess = 0
+        self.player_guess = 0
+        self.chances = 0
+        self.current_round_score = 0
 
     def easy_difficulty_chosen(self):
         """Player guesses a number from 1 to 10"""

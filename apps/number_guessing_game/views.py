@@ -108,6 +108,7 @@ class NumberGameView(QMainWindow):
         self.medium_difficulty_button = QPushButton("Medium")
         self.hard_difficulty_button = QPushButton("Hard")
         self.play_button = QPushButton("Play")
+        self.reset_button = QPushButton("Reset")
         difficulty_choice_layout.addWidget(self.easy_difficulty_button)
         difficulty_choice_layout.addSpacing(10)
         difficulty_choice_layout.addWidget(self.medium_difficulty_button)
@@ -115,6 +116,8 @@ class NumberGameView(QMainWindow):
         difficulty_choice_layout.addWidget(self.hard_difficulty_button)
         difficulty_choice_layout.addSpacing(10)
         difficulty_choice_layout.addWidget(self.play_button)
+        difficulty_choice_layout.addSpacing(10)
+        difficulty_choice_layout.addWidget(self.reset_button)
 
         # setting up the central widget
         # starts on r0 and c1, spans 2r and 6 col
