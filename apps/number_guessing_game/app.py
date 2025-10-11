@@ -1,5 +1,7 @@
-from PySide6.QtCore import QObject, Slot
+import sys
 
+from PySide6.QtCore import QObject, Slot
+from PySide6.QtWidgets import QApplication
 from apps.number_guessing_game.game import Game
 from apps.number_guessing_game.views import NumberGameView
 
@@ -31,18 +33,18 @@ class NumberGuessingApp(QObject):
         self.views.reset_button.clicked.connect(self.reset_game_on_click)
 
 
-    @Slot
+    @Slot(bool)
     def play_game_on_click(self):
         """
         Starts the game for guessing
         """
-        self.game.current_round_score = 0
+        self.views.user_input_box.clear()
         self.views.disable_difficulty_button()
         self.views.play_button.setDisabled(True)
         self.views.enable_guess_box()
 
 
-    @Slot
+    @Slot(bool)
     def reset_game_on_click(self):
         """
         Resets the scores, difficulty and number of guesses.
@@ -54,7 +56,7 @@ class NumberGuessingApp(QObject):
         self.views.user_input_box.clear()
         self.views.user_result_label.clear()
 
-    @Slot
+    @Slot(bool)
     def user_submission(self):
         """
         Extracts guess made by user when pressing enter checks if it is the correct guess.
@@ -93,7 +95,7 @@ class NumberGuessingApp(QObject):
     #     """
     #     return self.views.user_input_box.text()
 
-    @Slot
+    @Slot(bool)
     def difficulty_on_click(self):
         """
         sets the difficulty for the game
@@ -102,15 +104,25 @@ class NumberGuessingApp(QObject):
         if button_chosen == self.views.easy_difficulty_button:
             self.game.difficulty = "easy"
             self.game.easy_difficulty_chosen()
+            self.views.user_input_box.setText("Press Play to continue")
             self.views.game_difficulty_label.setText("Easy")
             self.views.user_chances_label.setText(str(self.game.chances))
         elif button_chosen == self.views.medium_difficulty_button:
             self.game.difficulty = "medium"
             self.game.medium_difficulty_chosen()
+            self.views.user_input_box.setText("Press Play to continue")
             self.views.game_difficulty_label.setText("Medium")
             self.views.user_chances_label.setText(str(self.game.chances))
         elif button_chosen == self.views.hard_difficulty_button:
             self.game.difficulty = "hard"
             self.game.hard_difficulty_chosen()
+            self.views.user_input_box.setText("Press Play to continue")
             self.views.game_difficulty_label.setText("Hard")
             self.views.user_chances_label.setText(str(self.game.chances))
+
+
+if __name__ == "__main__":
+    main_app = QApplication(sys.argv)
+    number_guessing_game = NumberGuessingApp()
+    number_guessing_game.views.show()
+    sys.exit(main_app.exec())

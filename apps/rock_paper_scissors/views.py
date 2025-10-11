@@ -35,7 +35,9 @@ class GameView(QMainWindow):
         self.setCentralWidget(central_widget)
         central_layout = QGridLayout(central_widget)
         background_image = os.path.join(BASE_PATH, "RPS_background.jpg")
+        print(background_image)
         background_image_url = QUrl.fromLocalFile(background_image).toString()
+        print(background_image_url)
         central_widget.setStyleSheet(f"""
     QWidget#central {{
         background-image: url("{background_image}");

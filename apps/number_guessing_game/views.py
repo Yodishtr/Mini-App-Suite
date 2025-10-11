@@ -3,11 +3,14 @@ Creates the GUI for the number guessing game.
 """
 import os.path
 
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import Qt, QUrl
+
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, \
     QVBoxLayout, \
     QWidget
 import yaml
+from PySide6.QtGui import QImageReader, QImage, QPixmap
+import os
 
 
 class NumberGameView(QMainWindow):
@@ -21,21 +24,22 @@ class NumberGameView(QMainWindow):
 
         # central widget
         central_widget = QWidget()
-        central_widget.setObjectName("CENTRAL")
+        central_widget.setObjectName("central")
         self.setCentralWidget(central_widget)
         central_widget_layout = QGridLayout()
         central_widget.setLayout(central_widget_layout)
+        central_widget.setAttribute(Qt.WA_StyledBackground, True)
 
         if self.data:
             background_image = self.data["path"]["background"]
+            print(background_image)
             background_image_path = os.path.join(BASE_PATH, background_image)
+            print(background_image_path)
             background_image_url = QUrl.fromLocalFile(background_image_path).toString()
+            print(background_image_url)
             central_widget.setStyleSheet(f"""
-            QWidget#central{{
-                background-image: url("{background_image_url}");
-                background-repeat: no-repeat;
-                background-size: cover;
-                background-position: center;
+            #central {{
+                border-image: url("{background_image_path}") 0 0 0 0 stretch stretch;
             }}
             QHBoxLayout#result{{
                 border: 1px dashed;
@@ -49,6 +53,7 @@ class NumberGameView(QMainWindow):
                 background-color: #d0d0d0;
             }}
             """)
+            print("File exists:", os.path.exists(background_image))
 
         # menu with scores and chances to guess left
         menu_layout = QHBoxLayout()
