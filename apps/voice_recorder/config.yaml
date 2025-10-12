@@ -1,0 +1,11 @@
+# Audio capture settings
+rate: 44100   # samples per second
+channels: 2   # 1 = mono, 2 = stereo
+chunk: 1024   # frames per read
+sample_format: int16    # one of: int16, int24, int32, float32
+device_index: null    # set an integer to lock a specific device
+
+# App behaviour
+output_dir: recordings
+default_filename_prefix: take
+auto_increment: true

@@ -88,13 +88,6 @@ class NumberGuessingApp(QObject):
                 self.views.play_button.setEnabled(True)
                 self.views.enable_difficulty_buttons()
 
-    # @Slot
-    # def user_edit_guess(self):
-    #     """
-    #     Extracts the edited text made by the user and returns it to be used during the game.
-    #     """
-    #     return self.views.user_input_box.text()
-
     @Slot(bool)
     def difficulty_on_click(self):
         """
@@ -119,10 +112,3 @@ class NumberGuessingApp(QObject):
             self.views.user_input_box.setText("Press Play to continue")
             self.views.game_difficulty_label.setText("Hard")
             self.views.user_chances_label.setText(str(self.game.chances))
-
-
-if __name__ == "__main__":
-    main_app = QApplication(sys.argv)
-    number_guessing_game = NumberGuessingApp()
-    number_guessing_game.views.show()
-    sys.exit(main_app.exec())
