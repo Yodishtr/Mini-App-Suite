@@ -5,8 +5,23 @@ import threading
 from dataclasses import dataclass
 from typing import Optional
 
+import numpy as np
 import pyaudio
 
+# Global variables for the formats and numpy array types for decoding
+_SAMPLE_FORMAT = {
+    "int16": pyaudio.paInt16,
+    "int24": pyaudio.paInt24,
+    "int32": pyaudio.paInt32,
+    "float32": pyaudio.paFloat32
+}
+
+_NP_DTYPES = {
+    "int16": np.int16,
+    "int24": np.int32,
+    "int32": np.int32,
+    "float32": np.float32
+}
 
 @dataclass
 class AudioConfig:
@@ -73,14 +88,45 @@ class AudioRecorder:
         maximum input channels, maximum output channels and the default sampling rate of the
         device.
         """
-        devices = {}
+        devices = []
         number_of_devices = self.audio_system.get_device_count()
         for i in range(number_of_devices):
-            current_device = self.audio_system.get_device_info_by_index(i)
-            current_device_name = current_device["name"]
-            current_device_input_channels = current_device["maxInputChannels"]
-            current_device_output_channels = current_device["maxOutputChannels"]
-            current_device_default_sample_rate = current_device["defaultSampleRate"]
-            devices[current_device_name] = [current_device_input_channels,
-                                            current_device_output_channels,
-                                            current_device_default_sample_rate]
+            current_device_info = self.audio_system.get_device_info_by_index(i)
+            if (int(current_device_info.get("maxInputChannels", 0)) > 0):
+                devices.append({
+                    "index": i,
+                    "name": current_device_info.get("name"),
+                    "rate": int(current_device_info.get("defaultSampleRate", 0)),
+                    "channels": int(current_device_info.get("maxInputChannels", 0))
+                })
+        return devices
+
+    def start(self):
+        """
+        Starts the recording of the audio using the PyAudio library. Stores the recorded audio in
+        the frames attribute of the AudioRecorder object
+        """
+        # the recording is running check:
+        if self.in_stream is not None:
+            return
+
+        current_format = _SAMPLE_FORMAT[self.audio_config.sample_format]
+        self.frames.clear()
+        self.running.set()
+
+        def _callback(data_in, frame_count, time_info, status_flag):
+            if self.running.is_set():
+                with self.lock:
+                    self.frames.append(data_in)
+                return (None, pyaudio.paContinue)
+            else:
+                return (None, pyaudio.paComplete)
+
+        self.in_stream = self.audio_system.open(format=current_format,
+                                                channels=self.audio_config.channels,
+                                                rate=self.audio_config.rate,
+                                                input=True,
+                                                input_device_index=self.audio_config.device_index,
+                                                frames_per_buffer=self.audio_config.chunk,
+                                                stream_callback=_callback)
+        self.in_stream.start_stream()
