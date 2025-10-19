@@ -112,7 +112,6 @@ class AudioRecorder:
 
         current_format = _SAMPLE_FORMAT[self.audio_config.sample_format]
         self.frames.clear()
-        self.running.set()
 
         def _callback(data_in, frame_count, time_info, status_flag):
             if self.running.is_set():
@@ -129,4 +128,46 @@ class AudioRecorder:
                                                 input_device_index=self.audio_config.device_index,
                                                 frames_per_buffer=self.audio_config.chunk,
                                                 stream_callback=_callback)
+        self.running.set()
         self.in_stream.start_stream()
+
+    def is_recording(self):
+        """
+        Checks the thread where the recording is currently being done.
+        Returns True if a recording is currently being made and False otherwise.
+        """
+        return self.running.is_set()
+
+    def stop(self):
+        """
+        Stops the recording and releases the thread event for when recording is running
+         that signifies pyAudio background thread is working
+        """
+        if (not self.is_recording()) or (self.in_stream is None):
+            return
+        else:
+            self.running.clear()
+            self.in_stream.stop_stream()
+            self.in_stream.close()
+            self.in_stream = None
+
+    def get_raw_bytes(self):
+        """
+        Concatenate the byte chunks in the self.frame into a single byte.
+        """
+        with self.lock:
+            concatenated_chunks = b"".join(self.frames)
+            return concatenated_chunks
+
+    def get_numpy(self):
+        """
+        Convert raw bytes to a float32 array in [-1, 1], because most edits are simpler
+        in a normalized float domain.
+        should be called after stop
+        """
+        current_format = self.audio_config.sample_format
+        current_channel = self.audio_config.channels
+        numpy_arr = (np.frombuffer(self.get_raw_bytes(), _NP_DTYPES[current_format])
+                     .reshape(-1, current_channel))
+
+        return numpy_arr
