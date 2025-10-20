@@ -18,7 +18,7 @@ _SAMPLE_FORMAT = {
 
 _NP_DTYPES = {
     "int16": np.int16,
-    "int24": np.int32,
+    "int24": np.int32, # need to remove this
     "int32": np.int32,
     "float32": np.float32
 }
@@ -151,12 +151,12 @@ class AudioRecorder:
             self.in_stream.close()
             self.in_stream = None
 
-    def get_raw_bytes(self):
+    def get_raw_bytes(self, frames):
         """
-        Concatenate the byte chunks in the self.frame into a single byte.
+        Concatenate the byte chunks in the frames into a single byte.
         """
         with self.lock:
-            concatenated_chunks = b"".join(self.frames)
+            concatenated_chunks = b"".join(frames)
             return concatenated_chunks
 
     def get_numpy(self):
@@ -166,27 +166,68 @@ class AudioRecorder:
         format == "int24" not supported
         should be called after stop
         """
-        raw_data = self.get_raw_bytes()
+        raw_data = self.get_raw_bytes(self.frames)
         if not raw_data:
             return np.empty((0, self.audio_config.channels), dtype=np.float32)
         current_format = self.audio_config.sample_format
         if current_format == "int16":
-            numpy_arr = (np.frombuffer(raw_data, _NP_DTYPES[current_format])
-                         .astype(np.float32) / 32768.0)
+            if self.audio_config.channels > 1:
+                frame_bytes = self.audio_config.channels * 2
+                remainder_sample = len(raw_data) % frame_bytes
+                if remainder_sample == 0:
+                    numpy_arr = (np.frombuffer(raw_data, _NP_DTYPES[current_format])
+                                 .astype(np.float32) / 32768.0)
+                    numpy_arr_result = numpy_arr.reshape(-1, self.audio_config.channels)
+                    return numpy_arr_result
+                else:
+                    new_raw_data = raw_data[:-remainder_sample]
+                    numpy_arr = (np.frombuffer(new_raw_data, _NP_DTYPES[current_format])
+                                 .astype(np.float32) / 32768.0)
+                    numpy_arr_result = numpy_arr.reshape(-1, self.audio_config.channels)
+                    return numpy_arr_result
+            else:
+                numpy_arr = (np.frombuffer(raw_data, _NP_DTYPES[current_format])
+                             .astype(np.float32) / 32768.0)
+                numpy_arr_result = numpy_arr.reshape(-1, 1)
+                return numpy_arr_result
+
         elif current_format == "int32":
-            numpy_arr = (np.frombuffer(raw_data, _NP_DTYPES[current_format])
-                         .astype(np.float32) / 2147483648.0)
+            if self.audio_config.channels > 1:
+                frame_bytes = self.audio_config.channels * 4
+                remainder_sample = len(raw_data) % frame_bytes
+                if remainder_sample == 0:
+                    numpy_arr = (np.frombuffer(raw_data, _NP_DTYPES[current_format])
+                                 .astype(np.float32) / 2147483648.0)
+                    numpy_arr_result = numpy_arr.reshape(-1, self.audio_config.channels)
+                    return numpy_arr_result
+                else:
+                    new_raw_data = raw_data[:-remainder_sample]
+                    numpy_arr = (np.frombuffer(new_raw_data, _NP_DTYPES[current_format])
+                                 .astype(np.float32) / 2147483648.0)
+                    numpy_arr_result = numpy_arr.reshape(-1, self.audio_config.channels)
+                    return numpy_arr_result
+            else:
+                numpy_arr = (np.frombuffer(raw_data, _NP_DTYPES[current_format])
+                             .astype(np.float32) / 2147483648.0)
+                numpy_arr_result = numpy_arr.reshape(-1, 1)
+                return numpy_arr_result
+
         elif current_format == 'float32':
-            numpy_arr = np.frombuffer(raw_data, _NP_DTYPES[current_format])
+            if self.audio_config.channels > 1:
+                frame_bytes = self.audio_config.channels * 4
+                remainder_sample = len(raw_data) % frame_bytes
+                if remainder_sample == 0:
+                    numpy_arr = np.frombuffer(raw_data, _NP_DTYPES[current_format])
+                    numpy_arr_result = numpy_arr.reshape(-1, self.audio_config.channels)
+                    return numpy_arr_result
+                else:
+                    new_raw_data = raw_data[:-remainder_sample]
+                    numpy_arr = np.frombuffer(new_raw_data, _NP_DTYPES[current_format])
+                    numpy_arr_result = numpy_arr.reshape(-1, self.audio_config.channels)
+                    return numpy_arr_result
+            else:
+                numpy_arr = np.frombuffer(raw_data, _NP_DTYPES[current_format])
+                numpy_arr_result = numpy_arr.reshape(-1, 1)
+                return numpy_arr_result
         else:
             raise ValueError("Unsupported Format")
-
-        if self.audio_config.channels > 1:
-            remainder_sample = len(raw_data) % self.audio_config.channels
-            if remainder_sample == 0:
-                numpy_arr = numpy_arr.reshape(-1, self.audio_config.channels)
-            else:
-                
-        else:
-            numpy_arr = numpy_arr.reshape(-1, 1)
-        return numpy_arr
