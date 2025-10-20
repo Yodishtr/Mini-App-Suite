@@ -163,11 +163,30 @@ class AudioRecorder:
         """
         Convert raw bytes to a float32 array in [-1, 1], because most edits are simpler
         in a normalized float domain.
+        format == "int24" not supported
         should be called after stop
         """
+        raw_data = self.get_raw_bytes()
+        if not raw_data:
+            return np.empty((0, self.audio_config.channels), dtype=np.float32)
         current_format = self.audio_config.sample_format
-        current_channel = self.audio_config.channels
-        numpy_arr = (np.frombuffer(self.get_raw_bytes(), _NP_DTYPES[current_format])
-                     .reshape(-1, current_channel))
+        if current_format == "int16":
+            numpy_arr = (np.frombuffer(raw_data, _NP_DTYPES[current_format])
+                         .astype(np.float32) / 32768.0)
+        elif current_format == "int32":
+            numpy_arr = (np.frombuffer(raw_data, _NP_DTYPES[current_format])
+                         .astype(np.float32) / 2147483648.0)
+        elif current_format == 'float32':
+            numpy_arr = np.frombuffer(raw_data, _NP_DTYPES[current_format])
+        else:
+            raise ValueError("Unsupported Format")
 
+        if self.audio_config.channels > 1:
+            remainder_sample = len(raw_data) % self.audio_config.channels
+            if remainder_sample == 0:
+                numpy_arr = numpy_arr.reshape(-1, self.audio_config.channels)
+            else:
+                
+        else:
+            numpy_arr = numpy_arr.reshape(-1, 1)
         return numpy_arr
