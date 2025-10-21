@@ -2,6 +2,7 @@
 Implements the recorder logic for the voice recorder
 """
 import threading
+import wave
 from dataclasses import dataclass
 from typing import Optional
 
@@ -231,3 +232,50 @@ class AudioRecorder:
                 return numpy_arr_result
         else:
             raise ValueError("Unsupported Format")
+
+    def save_wav(self, wav_name):
+        """
+        Saves the audio recording to a wav file. File can be played.
+        """
+        def clamp():
+            """
+            clamps float32 to int16 values and returns a byte string of the format
+            """
+            numeric_samples = self.get_numpy()
+            np.clip(numeric_samples, -1.0, 1.0, out=numeric_samples)
+            numeric_samples = numeric_samples * 32767.0
+            numeric_samples = np.round(numeric_samples)
+            int16_samples = numeric_samples.astype(np.int16)
+            return int16_samples
+
+        if self.is_recording():
+            return ("recording in session")
+        current_channels = self.audio_config.channels
+        current_format = self.audio_config.sample_format
+        current_sample_rate = self.audio_config.rate
+
+        if current_format == "float32":
+            current_audio_bytes = clamp()
+        else:
+            current_audio_bytes = self.get_raw_bytes(self.frames)
+
+        filename_wav_format = wav_name + ".wav"
+        with wave.open(filename_wav_format, "wb") as wf:
+            wf.setnchannels(current_channels)
+            if current_format == "int16":
+                block_align = current_channels * 2
+                byte_rate = current_sample_rate * block_align
+                remainder_frame_bytes = len(current_audio_bytes) % block_align
+                if remainder_frame_bytes != 0:
+                    current_audio_bytes = current_audio_bytes[:-remainder_frame_bytes]
+                wf.setsampwidth(2)
+            elif (current_format == "int32"):
+                block_align = current_channels * 4
+                byte_rate = current_sample_rate * block_align
+                remainder_frame_bytes = len(current_audio_bytes) % block_align
+                if remainder_frame_bytes != 0:
+                    current_audio_bytes = current_audio_bytes[:-remainder_frame_bytes]
+                wf.setsampwidth(4)
+
+            wf.setframerate(current_sample_rate)
+            wf.writeframes(current_audio_bytes)
