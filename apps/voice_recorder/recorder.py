@@ -1,6 +1,8 @@
 """
 Implements the recorder logic for the voice recorder
 """
+import os.path
+import re
 import threading
 import wave
 from dataclasses import dataclass
@@ -12,14 +14,12 @@ import pyaudio
 # Global variables for the formats and numpy array types for decoding
 _SAMPLE_FORMAT = {
     "int16": pyaudio.paInt16,
-    "int24": pyaudio.paInt24,
     "int32": pyaudio.paInt32,
     "float32": pyaudio.paFloat32
 }
 
 _NP_DTYPES = {
     "int16": np.int16,
-    "int24": np.int32, # need to remove this
     "int32": np.int32,
     "float32": np.float32
 }
@@ -246,7 +246,25 @@ class AudioRecorder:
             numeric_samples = numeric_samples * 32767.0
             numeric_samples = np.round(numeric_samples)
             int16_samples = numeric_samples.astype(np.int16)
-            return int16_samples
+            return int16_samples.tobytes()
+
+        def find_latest_filenumber():
+            """
+            Finds the max file number in the directory recordings
+            """
+            current_wd = os.getcwd()
+            recordings_dir = os.path.join(current_wd, "recordings")
+            files = os.listdir(recordings_dir)
+            max_number = 0
+            for f in files:
+                if f.endswith(".wav") and f.startswith(self.audio_config.default_filename_prefix):
+                    match = re.search(rf'(?<={re.escape(self.audio_config.default_filename_prefix)}_)\d+', f)
+                    if match:
+                        extracted_part = match.group(0)
+                        max_number = max(max_number, int(extracted_part) + 1)
+                    else:
+                        max_number = max(max_number, max_number + 1)
+            return max_number
 
         if self.is_recording():
             return ("recording in session")
@@ -254,15 +272,42 @@ class AudioRecorder:
         current_format = self.audio_config.sample_format
         current_sample_rate = self.audio_config.rate
 
-        if current_format == "float32":
-            current_audio_bytes = clamp()
-        else:
-            current_audio_bytes = self.get_raw_bytes(self.frames)
+        current_audio_bytes = self.get_raw_bytes(self.frames)
 
-        filename_wav_format = wav_name + ".wav"
+        output_dir = self.audio_config.output_dir
+        file_name_prefix = self.audio_config.default_filename_prefix
+        if not self.audio_config.auto_increment:
+            filename_wav_format = output_dir + "/" + wav_name + ".wav"
+        else:
+            latest_filenumber = find_latest_filenumber()
+            if latest_filenumber == 0:
+                latest_filenumber = "_00" + str(latest_filenumber)
+                filename_wav_format = (output_dir + "/" + file_name_prefix + latest_filenumber
+                                       + ".wav")
+            else:
+                if 10 <= latest_filenumber < 100:
+                    latest_filenumber = "_0" + str(latest_filenumber)
+                    filename_wav_format = (output_dir + "/" + file_name_prefix + latest_filenumber
+                                           + ".wav")
+                elif 1 <= latest_filenumber < 10:
+                    latest_filenumber = "_00" + str(latest_filenumber)
+                    filename_wav_format = (output_dir + "/" + file_name_prefix + latest_filenumber +
+                                           ".wav")
+
         with wave.open(filename_wav_format, "wb") as wf:
             wf.setnchannels(current_channels)
-            if current_format == "int16":
+
+            if current_format == "float32":
+                if len(current_audio_bytes) != 0:
+                    current_audio_bytes = clamp()
+                block_align = current_channels * 2
+                byte_rate = current_sample_rate * block_align
+                remainder_frame_bytes = len(current_audio_bytes) % block_align
+                if remainder_frame_bytes != 0:
+                    current_audio_bytes = current_audio_bytes[:-remainder_frame_bytes]
+                wf.setsampwidth(2)
+
+            elif current_format == "int16":
                 block_align = current_channels * 2
                 byte_rate = current_sample_rate * block_align
                 remainder_frame_bytes = len(current_audio_bytes) % block_align
