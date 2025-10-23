@@ -37,6 +37,24 @@ class AudioConfig:
     auto_increment: bool = True
 
 
+class RecordingInSession(Exception):
+    """
+    Exceptions raised when operations are being done on frames while recording is being done
+    """
+    def __init__(self, message="Recording is in session"):
+        self.message = message
+        super().__init__(self.message)
+
+
+class PlayRecordingInSession(Exception):
+    """
+    Exception raised when trying to press play button while playing is being done
+    """
+    def __init__(self, message="Playing in session"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class AudioRecorder:
     """
     A non-blocking microphone recorder using PyAudio.
@@ -109,7 +127,7 @@ class AudioRecorder:
         """
         # the recording is running check:
         if self.in_stream is not None:
-            return
+            raise RecordingInSession
 
         current_format = _SAMPLE_FORMAT[self.audio_config.sample_format]
         self.frames.clear()
@@ -252,47 +270,43 @@ class AudioRecorder:
             """
             Finds the max file number in the directory recordings
             """
-            current_wd = os.getcwd()
-            recordings_dir = os.path.join(current_wd, "recordings")
+            current_wd = os.path.dirname(os.path.abspath(__file__))
+            recordings_dir = os.path.join(current_wd, self.audio_config.output_dir)
+            if not os.path.isdir(recordings_dir):
+                os.mkdir(recordings_dir)
             files = os.listdir(recordings_dir)
             max_number = 0
             for f in files:
-                if f.endswith(".wav") and f.startswith(self.audio_config.default_filename_prefix):
+                if (f.endswith(".wav") and f.startswith(f"{self.audio_config.default_filename_prefix}_")):
                     match = re.search(rf'(?<={re.escape(self.audio_config.default_filename_prefix)}_)\d+', f)
                     if match:
                         extracted_part = match.group(0)
-                        max_number = max(max_number, int(extracted_part) + 1)
-                    else:
-                        max_number = max(max_number, max_number + 1)
-            return max_number
+                        max_number = max(int(extracted_part), max_number)
+
+            return max_number + 1
 
         if self.is_recording():
-            return ("recording in session")
+            raise RecordingInSession()
         current_channels = self.audio_config.channels
         current_format = self.audio_config.sample_format
         current_sample_rate = self.audio_config.rate
 
         current_audio_bytes = self.get_raw_bytes(self.frames)
 
-        output_dir = self.audio_config.output_dir
+        current_wd = os.path.dirname(os.path.abspath(__file__))
+        output_dir = os.path.join(current_wd, self.audio_config.output_dir)
         file_name_prefix = self.audio_config.default_filename_prefix
         if not self.audio_config.auto_increment:
-            filename_wav_format = output_dir + "/" + wav_name + ".wav"
+            if not os.path.isdir(output_dir):
+                os.mkdir(output_dir)
+            if wav_name.endswith(".wav"):
+                wav_name = wav_name[:-4]
+            filename_wav_format = os.path.join(output_dir, (wav_name + ".wav"))
         else:
             latest_filenumber = find_latest_filenumber()
-            if latest_filenumber == 0:
-                latest_filenumber = "_00" + str(latest_filenumber)
-                filename_wav_format = (output_dir + "/" + file_name_prefix + latest_filenumber
-                                       + ".wav")
-            else:
-                if 10 <= latest_filenumber < 100:
-                    latest_filenumber = "_0" + str(latest_filenumber)
-                    filename_wav_format = (output_dir + "/" + file_name_prefix + latest_filenumber
-                                           + ".wav")
-                elif 1 <= latest_filenumber < 10:
-                    latest_filenumber = "_00" + str(latest_filenumber)
-                    filename_wav_format = (output_dir + "/" + file_name_prefix + latest_filenumber +
-                                           ".wav")
+            left_padded_filenumber = str(latest_filenumber).zfill(3)
+            file_name = file_name_prefix + "_" + left_padded_filenumber + ".wav"
+            filename_wav_format = os.path.join(output_dir, file_name)
 
         with wave.open(filename_wav_format, "wb") as wf:
             wf.setnchannels(current_channels)
@@ -324,3 +338,14 @@ class AudioRecorder:
 
             wf.setframerate(current_sample_rate)
             wf.writeframes(current_audio_bytes)
+
+    def play_audio(self, wav_file=None):
+        """
+        Plays the wav file if provided, otherwise it will just play directly from the current
+        self.frames which is being recorded
+        """
+        if self.out_stream is not None:
+            raise PlayRecordingInSession()
+
+        if not wav_file:
+            current_format = _SAMPLE_FORMAT[self.audio_config.sample_format]
