@@ -54,6 +54,14 @@ class PlayRecordingInSession(Exception):
         self.message = message
         super().__init__(self.message)
 
+class NoRecordingAvailable(Exception):
+    """
+    Exception raised when trying to play an empty self.frame.
+    """
+    def __init__(self, message="No current recordings to be played"):
+        self.message = message
+        super().__init__(self.message)
+
 
 class AudioRecorder:
     """
@@ -156,6 +164,13 @@ class AudioRecorder:
         Returns True if a recording is currently being made and False otherwise.
         """
         return self.running.is_set()
+
+    def is_in_playing(self):
+        """
+        Checks the thread where the audio is currently being played.
+        Returns True if a recording is being played and False otherwise
+        """
+        return self.playing.is_set()
 
     def stop(self):
         """
@@ -339,13 +354,55 @@ class AudioRecorder:
             wf.setframerate(current_sample_rate)
             wf.writeframes(current_audio_bytes)
 
-    def play_audio(self, wav_file=None):
+    def play_audio(self):
         """
         Plays the wav file if provided, otherwise it will just play directly from the current
         self.frames which is being recorded
         """
+        def _callback(data_in, frame_count, time_info, status_flag):
+            if self.is_in_playing():
+                bytes_needed = frame_count * current_channel_number * bytes_per_sample
+                with self.lock:
+                    chunk = recorded_bytes[self.play_pos: self.play_pos + bytes_needed]
+                    self.play_pos += len(chunk)
+                    if len(chunk) == bytes_needed:
+                        return (chunk, pyaudio.paContinue)
+                    elif len(chunk) < bytes_needed:
+                        difference = bytes_needed - len(chunk)
+                        padded_zeroes = [0] * difference
+                        chunk += bytes(padded_zeroes)
+                        return (chunk, pyaudio.paComplete)
+
+            else:
+                bytes_needed = frame_count * current_channel_number * bytes_per_sample
+                silence_bytes = bytes([0] * bytes_needed)
+                return (silence_bytes, pyaudio.paContinue)
+
         if self.out_stream is not None:
             raise PlayRecordingInSession()
 
-        if not wav_file:
-            current_format = _SAMPLE_FORMAT[self.audio_config.sample_format]
+        if len(self.frames) == 0:
+            raise NoRecordingAvailable
+
+        current_format_str = self.audio_config.sample_format
+        if current_format_str == "int16":
+            bytes_per_sample = 2
+        elif (current_format_str == "int32" or current_format_str == "float32"):
+            bytes_per_sample = 4
+
+        current_rate = self.audio_config.rate
+        current_format = _SAMPLE_FORMAT[current_format_str]
+        current_channel_number = self.audio_config.channels
+        bytes_per_frame = current_channel_number * bytes_per_sample
+        recorded_bytes = self.get_raw_bytes(self.frames)
+        if self.play_pos % bytes_per_frame != 0:
+            self.play_pos -= self.play_pos % bytes_per_frame
+        self.out_stream = self.audio_system.open(format=current_format,
+                                                 channels=current_channel_number,
+                                                 rate=current_rate,
+                                                 output=True,
+                                                 frames_per_buffer=self.audio_config.chunk,
+                                                 stream_callback=_callback)
+
+        self.playing.set()
+        self.out_stream.start_stream()
