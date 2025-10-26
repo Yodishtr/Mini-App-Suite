@@ -54,6 +54,7 @@ class PlayRecordingInSession(Exception):
         self.message = message
         super().__init__(self.message)
 
+
 class NoRecordingAvailable(Exception):
     """
     Exception raised when trying to play an empty self.frame.
