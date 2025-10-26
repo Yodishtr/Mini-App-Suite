@@ -109,6 +109,12 @@ class AudioRecorder:
         # enables us to check if the recording is currently being played
         self.playing = threading.Event()
 
+        # enables us to check if the recording is done playing now
+        self.playback_done = threading.Event()
+
+        # enables us to check if the recording is currently paused, stopped or playing
+        self.play_status = "stopped"
+
     def list_devices_connected(self):
         """
         returns a dictionary of the devices connected with the key = device name and values are the
@@ -354,6 +360,48 @@ class AudioRecorder:
             wf.setframerate(current_sample_rate)
             wf.writeframes(current_audio_bytes)
 
+    def _start_playback_monitor(self):
+        """
+        A lightweight background thread that clears up after natural completion
+        """
+        if getattr(self, "_playback_monitor_thread",
+                   None) and self._playback_monitor_thread.is_alive():
+            return
+        self._playback_monitor_thread = threading.Thread(
+            target=self._playback_monitor_loop, daemon=True
+        )
+        self._playback_monitor_thread.start()
+
+    def _playback_monitor_loop(self):
+        """
+        Waits for playback to start (self.playing set), then waits for natural completion
+        (self.playback_done set by the callback). When that happens, it performs teardown
+        on the main side (not inside the callback).
+        """
+        while True:
+            # wait until playing actually starts
+            self.playing.wait()
+            # wait until playback_done signals completion
+            self.playback_done.wait()
+            # at this point the playback finished naturally
+            try:
+                if self.out_stream is not None:
+                    try:
+                        self.out_stream.stop_stream()
+                    except Exception:
+                        print("Fuck this")
+                    try:
+                        self.out_stream.close()
+                    except Exception:
+                        print("Fuck this again")
+                    self.out_stream = None
+            finally:
+                self.play_status = "stopped"
+                self.playing.clear()
+                with self.lock:
+                    self.play_pos = 0
+                self.playback_done.clear()
+
     def play_audio(self):
         """
         Plays the wav file if provided, otherwise it will just play directly from the current
@@ -371,6 +419,7 @@ class AudioRecorder:
                         difference = bytes_needed - len(chunk)
                         padded_zeroes = [0] * difference
                         chunk += bytes(padded_zeroes)
+                        self.playback_done.set()
                         return (chunk, pyaudio.paComplete)
 
             else:
@@ -378,11 +427,11 @@ class AudioRecorder:
                 silence_bytes = bytes([0] * bytes_needed)
                 return (silence_bytes, pyaudio.paContinue)
 
-        if self.out_stream is not None:
-            raise PlayRecordingInSession()
-
         if len(self.frames) == 0:
             raise NoRecordingAvailable
+
+        if self.play_status == "playing":
+            raise PlayRecordingInSession()
 
         current_format_str = self.audio_config.sample_format
         if current_format_str == "int16":
@@ -405,4 +454,38 @@ class AudioRecorder:
                                                  stream_callback=_callback)
 
         self.playing.set()
+        self.play_status = "playing"
+        self.playback_done.clear()
         self.out_stream.start_stream()
+        self._start_playback_monitor()
+
+    def pause_playing(self):
+        """
+        Pauses the playing of a recording
+        """
+        if not self.play_status == "playing":
+            return
+        self.play_status = "paused"
+        self.playing.clear()
+        self.out_stream.stop_stream()
+        self.out_stream.close()
+        self.playback_done.set()
+        self.out_stream = None
+
+    def stop_playing(self):
+        """
+        Stops the playing of a recording and resets the playhead position to the start of the
+        recording
+        """
+        if self.play_status == "stopped":
+            with self.lock:
+                self.play_pos = 0
+        else:
+            with self.lock:
+                self.play_pos = 0
+                self.playing.clear()
+                self.out_stream.stop_stream()
+                self.out_stream.close()
+                self.out_stream = None
+                self.playback_done.set()
+                self.play_status = "stopped"
