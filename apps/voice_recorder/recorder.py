@@ -273,7 +273,7 @@ class AudioRecorder:
         else:
             raise ValueError("Unsupported Format")
 
-    def save_wav(self, wav_name):
+    def save_wav(self, wav_name=None):
         """
         Saves the audio recording to a wav file. File can be played.
         """
@@ -318,7 +318,7 @@ class AudioRecorder:
         current_wd = os.path.dirname(os.path.abspath(__file__))
         output_dir = os.path.join(current_wd, self.audio_config.output_dir)
         file_name_prefix = self.audio_config.default_filename_prefix
-        if not self.audio_config.auto_increment:
+        if not self.audio_config.auto_increment or not wav_name:
             if not os.path.isdir(output_dir):
                 os.mkdir(output_dir)
             if wav_name.endswith(".wav"):
@@ -432,7 +432,7 @@ class AudioRecorder:
             raise NoRecordingAvailable
 
         if self.play_status == "playing":
-            raise PlayRecordingInSession()
+            raise PlayRecordingInSession
 
         current_format_str = self.audio_config.sample_format
         if current_format_str == "int16":

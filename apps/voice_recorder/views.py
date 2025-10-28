@@ -3,7 +3,8 @@ Creates the specific UI for the voice recorder app.
 """
 import os.path
 
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QMainWindow, QProgressBar, \
+from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QMainWindow, QMessageBox, \
+    QProgressBar, \
     QPushButton, QVBoxLayout, QWidget
 from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
@@ -89,12 +90,22 @@ class VoiceRecorderView(QMainWindow):
         self.clip_level.setObjectName("ClipLevel")
         clip_level_layout.addWidget(self.clip_level)
 
+        # shows a popup box for when there are important messages
+        message_box_layout = QVBoxLayout()
+        message_title = QLabel("Oye Oye Un Message pour vous messire")
+        self.message_box = QMessageBox()
+        self.message_box.setIcon(QMessageBox.Icon.Information)
+        self.message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+        message_box_layout.addWidget(message_title)
+        message_box_layout.addSpacing(5)
+        message_box_layout.addWidget(self.message_box)
 
         # adding the different layouts to the central layout
         central_layout.addLayout(menu_options_layout, 0, 0, 2, 6)
         central_layout.addLayout(indicators_layout, 3, 0, 2, 4)
         central_layout.addLayout(progress_bar_layout, 4, 0, 2, 6)
         central_layout.addLayout(clip_level_layout, 6, 0, 1, 1)
+        central_layout.addLayout(message_box_layout, 8, 0, 2, 4)
 
     def _exit_app(self):
         """Closes the app"""
