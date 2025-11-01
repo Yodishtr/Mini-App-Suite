@@ -75,7 +75,8 @@ class VoiceRecorder(QObject):
             normalized_float_array = ((int_array.astype('float32') / 2147483648.0).
                                       reshape(-1, current_channels))
         elif current_sample_format == "float32":
-            normalized_float_array = (np.frombuffer(tail).reshape(-1, current_channels))
+            normalized_float_array = (np.frombuffer(tail, dtype=np.float32).
+                                      reshape(-1, current_channels))
 
         samples = np.mean(np.abs(normalized_float_array), axis=1)
         rms = np.sqrt(np.mean(samples ** 2))
@@ -87,11 +88,23 @@ class VoiceRecorder(QObject):
             is_clipping = False
         return (rms, peak, db, is_clipping)
 
-    @Slot(bool)
+    @Slot()
     def timer_tick(self):
         """
         does the computation for the VU, clip and db
         """
+        if self.state_machine == State.RECORDING:
+            rms, peak, db_level, clip_state = self.compute_byte_slice_size()
+            self.audio_recorder_views.setVULevel(rms)
+            if db_level < -80:
+                db_level = -80
+            self.audio_recorder_views.setDBLabel(str(db_level))
+            self.audio_recorder_views.setPeakClipping(clip_state)
+        elif self.state_machine == State.PLAYING:
+            if not self.audio_recorder_logic.is_in_playing():
+                self.state_machine = State.STOPPED
+                self.timer.stop()
+
 
 
     @Slot(bool)
@@ -99,12 +112,18 @@ class VoiceRecorder(QObject):
         """
         Calls the method from the audio recorder class to start the recording
         """
+        if self.state_machine == State.PLAYING or self.state_machine == State.PAUSED:
+            self.audio_recorder_views.message_box.setText("Finish playing or stop pausing 1st")
+            return
         try:
+            self.audio_recorder_logic.start()
             self.state_machine = State.RECORDING
             self.audio_recorder_views.recording_label.setStyleSheet("background-color: red;")
-            self.audio_recorder_logic.start()
+            self.timer.start()
         except (RecordingInSession):
             self.audio_recorder_views.message_box.setText("Recording in Session")
+
+
 
     @Slot(bool)
     def pause_requested(self):
@@ -114,6 +133,7 @@ class VoiceRecorder(QObject):
         if self.state_machine == State.PLAYING:
             self.audio_recorder_logic.pause_playing()
             self.state_machine = State.PAUSED
+            self.timer.stop()
         else:
             self.audio_recorder_views.message_box.setText("Pause button is only for playback")
 
@@ -126,10 +146,12 @@ class VoiceRecorder(QObject):
             self.audio_recorder_logic.stop()
             self.state_machine = State.STOPPED
             self.audio_recorder_views.recording_label.setStyleSheet("background-color: grey;")
+            self.timer.stop()
 
         elif self.state_machine == State.PLAYING:
             self.audio_recorder_logic.stop_playing()
             self.state_machine = State.STOPPED
+            self.timer.stop()
         else:
             self.audio_recorder_views.message_box.setText("Use your brain bruh! "
                                                           "nothing else to stop")
@@ -139,9 +161,13 @@ class VoiceRecorder(QObject):
         """
         calls the method from the audio recorder to play the recently recorded audio.
         """
+        if self.state_machine == State.RECORDING:
+            self.audio_recorder_views.message_box.setText("Finish recording first")
+            return
         try:
             self.audio_recorder_logic.play_audio()
             self.state_machine = State.PLAYING
+            self.timer.start()
         except (NoRecordingAvailable):
             self.audio_recorder_views.message_box.setText("No Recording to play. Record Something")
 
@@ -157,5 +183,7 @@ class VoiceRecorder(QObject):
         try:
             self.audio_recorder_logic.save_wav()
             self.state_machine = State.IDLE
+            if self.timer.isActive():
+                self.timer.stop()
         except (RecordingInSession):
             self.audio_recorder_views.message_box.setText("Recording rn! Cant save")
