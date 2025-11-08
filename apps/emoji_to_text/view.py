@@ -34,10 +34,15 @@ class EmojiToTextView(QMainWindow):
         QLabel#Title{{
             font-size: 18px;
             font-weight: bold;
+            color: blue;
+            background-color: lightgrey;
         }}
         QLabel#Box{{
             border: 1px solid black;
             background-color: lightgrey;
+        }}
+        QPushButton {{
+            background-color: black;
         }}
         QPushButton:hover{{
                 background-color: #f0f0f0;
@@ -110,7 +115,7 @@ class EmojiToTextView(QMainWindow):
         binary_version_title = QLabel("Binary version of the text")
         binary_version_title.setObjectName("Title")
         self.binary_textbox = QLabel("")
-        self.last_letter_textbox.setObjectName("Box")
+        self.binary_textbox.setObjectName("Box")
         self.binary_textbox.setWordWrap(True)
         binary_scrollArea = QScrollArea()
         binary_scrollArea.setWidgetResizable(True)
@@ -119,8 +124,24 @@ class EmojiToTextView(QMainWindow):
         binary_version_layout.addSpacing(5)
         binary_version_layout.addWidget(binary_scrollArea)
 
+        # full meaning textbox
+        full_meaning_layout = QHBoxLayout()
+        full_meaning_title = QLabel("Full meaning")
+        full_meaning_title.setObjectName("Title")
+        self.full_meaning_textbox = QLabel("")
+        self.full_meaning_textbox.setObjectName("Box")
+        self.full_meaning_textbox.setWordWrap(True)
+        full_meaning_scroll_area = QScrollArea()
+        full_meaning_scroll_area.setWidgetResizable(True)
+        full_meaning_scroll_area.setWidget(self.full_meaning_textbox)
+        full_meaning_layout.addWidget(full_meaning_title)
+        full_meaning_layout.addSpacing(5)
+        full_meaning_layout.addWidget(full_meaning_scroll_area)
+
         # arranging the different layouts
-        central_widget_layout.addLayout(first_letter_layout, 0, 1, 2, 6)
-        central_widget_layout.addLayout(middle_letter_layout, 3, 1, 2, 6)
-        central_widget_layout.addLayout(last_letter_layout, 6, 1, 2, 6)
-        central_widget_layout.addLayout(binary_version_layout, 9, 1, 2, 6)
+        central_widget_layout.addLayout(input_message_layout, 0, 1, 2, 10)
+        central_widget_layout.addLayout(first_letter_layout, 3, 1, 2, 10)
+        central_widget_layout.addLayout(middle_letter_layout, 6, 1, 2, 10)
+        central_widget_layout.addLayout(last_letter_layout, 9, 1, 2, 10)
+        central_widget_layout.addLayout(binary_version_layout, 12, 1, 2, 10)
+        central_widget_layout.addLayout(full_meaning_layout, 15, 1, 2, 10)

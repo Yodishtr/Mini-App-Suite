@@ -61,7 +61,7 @@ class Translator:
             self.last_letter_only = " ".join(result_last_letter)
             self.full_meaning = " ".join(result_full_word)
 
-            binary_str = self.convert_to_binary(result_full_word)
+            binary_str = self.convert_to_binary(self.full_meaning)
             self.binary_result = binary_str
 
     def convert_to_binary(self, word_list):
