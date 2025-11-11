@@ -33,6 +33,7 @@ class WordGuessingLogic():
     def __init__(self):
         """game logic constructor for the word guessing game."""
         self.word_target = None
+        self.word_length = 0
         self.game_difficulty = None
         self.guess_count = None
         self.user_guess = None
@@ -68,6 +69,7 @@ class WordGuessingLogic():
         random_idx = randint(0, self.word_provider.easy_count)
         random_word = self.word_provider.easy_lst[random_idx]
         self.word_target = random_word
+        self.word_length = len(random_word)
 
     def hard_pick(self):
         """
@@ -76,6 +78,7 @@ class WordGuessingLogic():
         random_idx = randint(0, self.word_provider.hard_count)
         random_word = self.word_provider.hard_lst[random_idx]
         self.word_target = random_word
+        self.word_length = len(random_word)
 
     def medium_pick(self):
         """
@@ -84,6 +87,7 @@ class WordGuessingLogic():
         random_idx = randint(0, self.word_provider.medium_count)
         random_word = self.word_provider.medium_lst[random_idx]
         self.word_target = random_word
+        self.word_length = len(random_word)
 
     def set_guess_count(self):
         """Sets the guesses allowed by the user based on the difficulty they chose"""
@@ -96,7 +100,7 @@ class WordGuessingLogic():
     def check_user_input(self):
         """Checks the user input against the target word"""
         if self.user_guess is None:
-            return
+            self.word_compare()
         elif self.guess_count > 1:
             self.word_compare()
             self.guess_count -= 1
@@ -110,6 +114,8 @@ class WordGuessingLogic():
         """
         processes the word comparison between the user's guess and the target word
         """
+        if self.user_guess is None:
+            return
         target_work_breakdown = list(self.word_target)
         user_guess_breakdown = list(self.user_guess)
         for i in range(len(user_guess_breakdown)):

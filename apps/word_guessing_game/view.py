@@ -1,13 +1,13 @@
 """Creates the GUI for the word guessing game"""
 import os
 
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QMainWindow, QPushButton, \
+from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, \
     QVBoxLayout, QWidget
 from PySide6.QtCore import Qt
 
 
 class LetterTile(QLabel):
-    """A qlabel that acts as a tile to display the users guess"""
+    """A Qlabel that acts as a tile to display the users guess"""
     def __init__(self, size=48, parent=None):
         super().__init__(parent)
         self.setFixedSize(size, size)
@@ -69,6 +69,48 @@ class LetterTile(QLabel):
 class OneBoardRow(QWidget):
     """A single row board to display the letter tiles representing the user's input"""
 
+    def __init__(self, parent=None):
+        """constructor to build the row displaying the player's input"""
+        super().__init__(parent)
+        self.tiles = []
+        self.word_length = 0
+        self.layout = QHBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(5)
+
+    def setup_tiles(self, word_len):
+        """clears the letter tiles and makes them ready to accept new input"""
+        for t in self.tiles:
+            t.setParent(None)
+        self.tiles.clear()
+        self.word_length = word_len
+        for i in range(word_len):
+            tile = LetterTile(self)
+            self.tiles.append(tile)
+            self.layout.addWidget(tile)
+
+    def set_text(self, txt):
+        """sets the letters input by the user into the letter tiles"""
+        if not txt:
+            text = ""
+        else:
+            text = txt[:self.word_length]
+        for i in range(self.word_length):
+            if i < len(text):
+                self.tiles[i].set_char(text[i])
+            else:
+                self.tiles[i].set_char("")
+
+    def reveal_state(self, states):
+        """changes the states of each letter tile according to the game logic feedback"""
+        for i, st in enumerate(states[:self.word_length]):
+            self.tiles[i].set_state(st)
+
+    def clear_all(self):
+        """clears all the tiles in the row to change the tiles"""
+        for t in self.tiles:
+            t.clear_tile()
+
 
 class WordGuesserView(QMainWindow):
     """Class implementing the GUI for the game"""
@@ -127,8 +169,22 @@ class WordGuesserView(QMainWindow):
         choose_diff_layout.addWidget(self.hard_difficulty_button)
 
         # layout for the user to input their guesses and display it
+        user_input_layout = QHBoxLayout()
+        self.user_input = QLineEdit()
+        self.user_input.setMaxLength(15)
+        self.user_input.setPlaceholderText("Write your guess!")
+        self.submit_button = QPushButton("Submit")
+        user_input_layout.addWidget(self.user_input)
+        user_input_layout.addSpacing(10)
+        user_input_layout.addWidget(self.submit_button)
 
+        board_layout = QVBoxLayout()
+        self.board = OneBoardRow(self)
+        board_layout.addWidget(self.board)
+        board_layout.addSpacing(10)
+        board_layout.addLayout(user_input_layout)
 
         # central layout setup for the ui
         central_widget_layout.addLayout(menu_layout, 0, 1, 2, 6)
         central_widget_layout.addLayout(choose_diff_layout, 3, 1, 1, 6)
+        central_widget_layout.addLayout(board_layout, 5, 1, 5, 6)
