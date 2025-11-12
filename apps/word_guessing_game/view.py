@@ -85,7 +85,7 @@ class OneBoardRow(QWidget):
         self.tiles.clear()
         self.word_length = word_len
         for i in range(word_len):
-            tile = LetterTile(self)
+            tile = LetterTile(48, self)
             self.tiles.append(tile)
             self.layout.addWidget(tile)
 
@@ -132,6 +132,16 @@ class WordGuesserView(QMainWindow):
         QWidget#central{{
             background-image: url("{background_image}");
         }}
+        QLabel#title{{
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }}
+        QLabel#label{{
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+        }}
         """)
 
         # menu box
@@ -140,7 +150,9 @@ class WordGuesserView(QMainWindow):
         # difficulty element of the menu
         difficulty_layout = QVBoxLayout()
         difficulty_title = QLabel("Difficulty")
+        difficulty_title.setObjectName("title")
         self.difficulty_chosen = QLabel("")
+        self.difficulty_chosen.setObjectName("label")
         difficulty_layout.addWidget(difficulty_title)
         difficulty_layout.addSpacing(5)
         difficulty_layout.addWidget(self.difficulty_chosen)
@@ -150,12 +162,26 @@ class WordGuesserView(QMainWindow):
         # guess count
         guesses_layout = QVBoxLayout()
         guess_count_title = QLabel("Guess Count:")
+        guess_count_title.setObjectName("title")
         self.guess_count = QLabel("")
+        self.guess_count.setObjectName("label")
         guesses_layout.addWidget(guess_count_title)
         guesses_layout.addSpacing(5)
         guesses_layout.addWidget(self.guess_count)
         menu_layout.addLayout(guesses_layout)
         menu_layout.addSpacing(5)
+
+        # game result
+        game_result_layout = QVBoxLayout()
+        game_result_title = QLabel("Game Result: ")
+        game_result_title.setObjectName("title")
+        self.game_result = QLabel("")
+        self.game_result.setObjectName("label")
+        game_result_layout.addWidget(game_result_title)
+        game_result_layout.addSpacing(5)
+        game_result_layout.addWidget(self.game_result)
+        menu_layout.addLayout(game_result_layout)
+        game_result_layout.addSpacing(5)
 
         # choose difficulty buttons
         choose_diff_layout = QHBoxLayout()

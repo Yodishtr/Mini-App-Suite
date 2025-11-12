@@ -38,9 +38,8 @@ class WordGuessingLogic():
         self.guess_count = None
         self.user_guess = None
         self.game_state = GameState.RUNNING
+        self.guess_result = []
         self.guess_result_correct = []
-        self.guess_result_present = []
-        self.guess_result_absent = []
 
         # initialized and store the word provider object
         BASE_PATH = os.path.dirname(__file__)
@@ -130,11 +129,12 @@ class WordGuessingLogic():
                     present = True
                     break
             if correct and present:
+                self.guess_result.append((user_guess_breakdown[i], i, LetterState.CORRECT))
                 self.guess_result_correct.append((user_guess_breakdown[i], i, LetterState.CORRECT))
             elif not correct and present:
-                self.guess_result_present.append((user_guess_breakdown[i], i, LetterState.PRESENT))
+                self.guess_result.append((user_guess_breakdown[i], i, LetterState.PRESENT))
             elif not correct and not present:
-                self.guess_result_absent.append((user_guess_breakdown[i], i, LetterState.ABSENT))
+                self.guess_result.append((user_guess_breakdown[i], i, LetterState.ABSENT))
 
         if len(self.guess_result_correct) == len(target_work_breakdown):
             self.game_state = GameState.WIN
