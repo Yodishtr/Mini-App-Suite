@@ -24,6 +24,17 @@ class MainAppView(QMainWindow):
         QWidget#central{{
             background-image: url("{background_image}");
         }}
+        QPushButton{{
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            background-color: purple;
+        }}
+        QWidget#title{{
+            font-weight: bold;
+            font-size: 24px;
+            color: lightgrey;
+        }}
         """)
 
         # button options
@@ -33,3 +44,22 @@ class MainAppView(QMainWindow):
         self.rock_paper_scissors_btn = QPushButton("Rock Paper Scissors")
         self.voice_recorder_btn = QPushButton("Voice Recorder")
         self.word_guess_btn = QPushButton("Word Guessing Game")
+        button_app_layout.addWidget(self.emoji_app_btn)
+        button_app_layout.addSpacing(5)
+        button_app_layout.addWidget(self.number_guess_btn)
+        button_app_layout.addSpacing(5)
+        button_app_layout.addWidget(self.rock_paper_scissors_btn)
+        button_app_layout.addSpacing(5)
+        button_app_layout.addWidget(self.voice_recorder_btn)
+        button_app_layout.addSpacing(5)
+        button_app_layout.addWidget(self.word_guess_btn)
+
+        # main menu display
+        main_menu_title_layout = QHBoxLayout()
+        main_menu_title = QLabel("Welcome to the main menu")
+        main_menu_title.setObjectName("title")
+        main_menu_title_layout.addWidget(main_menu_title)
+
+        # central layout
+        central_widget_layout.addLayout(button_app_layout, 1, 4, 10, 10)
+        central_widget_layout.addLayout(main_menu_title_layout, 5, 1, 2, 3)
