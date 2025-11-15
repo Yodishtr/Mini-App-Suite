@@ -38,13 +38,16 @@ Has a main app where each mini app can be opened:
 <img width="713" height="630" alt="Screenshot 2025-11-14 at 23 17 15" src="https://github.com/user-attachments/assets/afcde6c7-4321-4384-8dbd-7f67787b2887" />
 
 Word-guessing game:
+
 <img width="722" height="533" alt="Screenshot 2025-11-14 at 23 17 55" src="https://github.com/user-attachments/assets/3e0ddc52-721b-4d57-a097-8a6bef87f64b" />
 
 
 Voice Recorder:
+
 <img width="784" height="625" alt="Screenshot 2025-11-14 at 23 18 38" src="https://github.com/user-attachments/assets/214798ac-b057-49d3-9a39-a5c6684a4e45" />
 
 Rock paper scissors:
+
 <img width="797" height="744" alt="Screenshot 2025-11-14 at 23 18 18" src="https://github.com/user-attachments/assets/e2385c61-d265-4841-b8f3-7876ce19b34f" />
 
 Emoji to text:
